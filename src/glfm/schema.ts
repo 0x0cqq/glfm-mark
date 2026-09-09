@@ -4,6 +4,7 @@
  * 顺序很重要：文档节点在前，标记与内容节点随后，最后是块身份扩展。
  */
 import type { Extensions } from '@tiptap/core';
+import { Dropcursor, Gapcursor, UndoRedo } from '@tiptap/extensions';
 import { Link } from '@tiptap/extension-link';
 import { Text } from '@tiptap/extension-text';
 import {
@@ -27,6 +28,7 @@ import {
   GlfmAlertTitle,
   GlfmDetails,
   GlfmDetailsContent,
+  GlfmDetailsSummary,
   GlfmTable,
   GlfmTableCell,
   GlfmTableHeader,
@@ -82,6 +84,9 @@ export function glfmExtensions(): Extensions {
   return [
     GlfmDocument,
     Text,
+    UndoRedo,
+    Dropcursor,
+    Gapcursor,
     GlfmParagraph,
     GlfmHeading,
     GlfmBlockquote,
@@ -96,6 +101,7 @@ export function glfmExtensions(): Extensions {
     GlfmAlert,
     GlfmAlertTitle,
     GlfmDetails,
+    GlfmDetailsSummary,
     GlfmDetailsContent,
     GlfmTable,
     GlfmTableRow,
@@ -131,6 +137,7 @@ export {
   GlfmCodeBlock,
   GlfmDetails,
   GlfmDetailsContent,
+  GlfmDetailsSummary,
   GlfmDocument,
   GlfmEmoji,
   GlfmFootnoteReference,

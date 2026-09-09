@@ -243,7 +243,7 @@ describe('GLFM 专用节点', () => {
 
   it('折叠块输出 details 与 summary', () => {
     const node = schema.nodes.details.create({ open: false }, [
-      schema.nodes.detailsContent.create(null, schema.nodes.paragraph.create(null, text('点击展开'))),
+      schema.nodes.detailsSummary.create(null, text('点击展开')),
       schema.nodes.detailsContent.create(null, schema.nodes.paragraph.create(null, text('隐藏内容'))),
     ]);
     expect(serialize(node)).toBe(

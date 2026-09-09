@@ -1,0 +1,667 @@
+/**
+ * GLFM 编辑器样式。
+ *
+ * 全部编辑控件使用 `glfm-editor__*` 前缀，不覆盖宿主的全局标题、表格或按钮样式。
+ * 宿主存在 Material 样式时继承 `.md-typeset` 与 `--md-*` 变量；独立演示页
+ * 提供局部基础样式。
+ */
+
+.glfm-editor {
+  --glfm-border: var(--md-default-fg-color--lightest, #d8d8d8);
+  --glfm-bg: var(--md-default-bg-color, #ffffff);
+  --glfm-fg: var(--md-default-fg-color, #1f1f1f);
+  --glfm-muted: var(--md-default-fg-color--light, #6b6b6b);
+  --glfm-accent: var(--md-primary-fg-color, #3f51b5);
+  --glfm-code-bg: var(--md-code-bg-color, #f5f5f5);
+  --glfm-radius: 4px;
+  --glfm-font: var(--md-text-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif);
+  --glfm-mono: var(--md-code-font-family, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+
+  border: 1px solid var(--glfm-border);
+  border-radius: var(--glfm-radius);
+  background: var(--glfm-bg);
+  color: var(--glfm-fg);
+  font-family: var(--glfm-font);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+}
+
+.glfm-editor--readonly {
+  opacity: 0.98;
+}
+
+/* ---------------------------------------------------------------- 工具栏 */
+
+.glfm-editor__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+  padding: 0.35rem 0.4rem;
+  border-bottom: 1px solid var(--glfm-border);
+  background: var(--md-default-bg-color, #fafafa);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.glfm-editor__toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding-right: 0.35rem;
+  border-right: 1px solid var(--glfm-border);
+}
+
+.glfm-editor__toolbar-group--end {
+  margin-left: auto;
+  border-right: none;
+  padding-right: 0;
+}
+
+.glfm-editor__button,
+.glfm-editor__button-primary,
+.glfm-editor__select {
+  font: inherit;
+  line-height: 1.2;
+  padding: 0.25rem 0.45rem;
+  border: 1px solid transparent;
+  border-radius: var(--glfm-radius);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.glfm-editor__button:hover:not(:disabled),
+.glfm-editor__select:hover:not(:disabled) {
+  background: var(--md-default-fg-color--lightest, #eee);
+}
+
+.glfm-editor__button.is-active {
+  background: var(--glfm-accent);
+  border-color: var(--glfm-accent);
+  color: var(--md-primary-bg-color, #fff);
+}
+
+.glfm-editor__button:disabled,
+.glfm-editor__select:disabled,
+.glfm-editor__button-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.glfm-editor__button-primary {
+  background: var(--glfm-accent);
+  color: var(--md-primary-bg-color, #fff);
+  border-color: var(--glfm-accent);
+}
+
+.glfm-editor__select {
+  border-color: var(--glfm-border);
+  background: var(--glfm-bg);
+}
+
+.glfm-editor__select--narrow {
+  padding-right: 0.1rem;
+}
+
+.glfm-editor__file-input {
+  display: none;
+}
+
+/* ---------------------------------------------------------------- 编辑区 */
+
+.glfm-editor__content {
+  padding: 0.8rem;
+  min-height: 8rem;
+}
+
+.glfm-editor__content .ProseMirror {
+  outline: none;
+  min-height: 6rem;
+}
+
+.glfm-editor__content .ProseMirror > * + * {
+  margin-top: 0.6em;
+}
+
+.glfm-editor__content .ProseMirror:focus-visible {
+  outline: 2px solid var(--glfm-accent);
+  outline-offset: 2px;
+}
+
+.glfm-editor__content blockquote {
+  border-left: 4px solid var(--glfm-border);
+  margin: 0.6em 0;
+  padding-left: 0.8rem;
+  color: var(--glfm-muted);
+}
+
+.glfm-editor__content table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.glfm-editor__content th,
+.glfm-editor__content td {
+  border: 1px solid var(--glfm-border);
+  padding: 0.3rem 0.5rem;
+  vertical-align: top;
+}
+
+.glfm-editor__content th {
+  background: var(--glfm-code-bg);
+  font-weight: 600;
+}
+
+.glfm-editor__content ul,
+.glfm-editor__content ol {
+  padding-left: 1.4rem;
+}
+
+.glfm-editor__content ul[data-type='taskList'] {
+  list-style: none;
+  padding-left: 0.2rem;
+}
+
+.glfm-editor__content ul[data-type='taskList'] li {
+  display: flex;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+/* ------------------------------------------------------- 提示块（编辑区） */
+
+.glfm-editor__content .markdown-alert {
+  border-left: 4px solid var(--glfm-accent);
+  border-radius: var(--glfm-radius);
+  padding: 0.5rem 0.7rem;
+  margin: 0.6em 0;
+  background: color-mix(in srgb, var(--glfm-accent) 6%, transparent);
+}
+
+.glfm-editor__content .markdown-alert-tip { border-left-color: #00bfa5; }
+.glfm-editor__content .markdown-alert-important { border-left-color: #7c4dff; }
+.glfm-editor__content .markdown-alert-warning { border-left-color: #ff9100; }
+.glfm-editor__content .markdown-alert-caution { border-left-color: #ff5252; }
+
+.glfm-editor__content .markdown-alert-title {
+  font-weight: 700;
+  margin: 0 0 0.2rem;
+}
+
+/* ------------------------------------------------------------ 源码保留块 */
+
+.glfm-editor__source-block {
+  border: 1px dashed var(--glfm-border);
+  border-radius: var(--glfm-radius);
+  background: var(--glfm-code-bg);
+  margin: 0.6em 0;
+}
+
+.glfm-editor__source-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1px solid var(--glfm-border);
+  font-size: 0.75rem;
+}
+
+.glfm-editor__source-badge {
+  background: var(--glfm-accent);
+  color: var(--md-primary-bg-color, #fff);
+  border-radius: 2px;
+  padding: 0 0.3rem;
+}
+
+.glfm-editor__source-hint {
+  color: var(--glfm-muted);
+  flex: 1;
+}
+
+.glfm-editor__source-edit,
+.glfm-editor__source-save,
+.glfm-editor__source-cancel {
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--glfm-border);
+  border-radius: var(--glfm-radius);
+  background: var(--glfm-bg);
+  cursor: pointer;
+}
+
+.glfm-editor__source-preview,
+.glfm-editor__source-input {
+  margin: 0;
+  padding: 0.5rem;
+  font-family: var(--glfm-mono);
+  font-size: 0.78rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+
+.glfm-editor__source-input {
+  display: block;
+  width: 100%;
+  min-height: 6rem;
+  border: none;
+  outline: none;
+  resize: vertical;
+  background: var(--glfm-bg);
+  color: inherit;
+}
+
+/* --------------------------------------------------------------- 代码块 */
+
+.glfm-editor__code-block {
+  border: 1px solid var(--glfm-border);
+  border-radius: var(--glfm-radius);
+  overflow: hidden;
+  margin: 0.6em 0;
+  background: var(--glfm-code-bg);
+}
+
+.glfm-editor__code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  padding: 0.2rem 0.5rem;
+  border-bottom: 1px solid var(--glfm-border);
+  font-size: 0.75rem;
+}
+
+.glfm-editor__code-language,
+.glfm-editor__code-copy {
+  font: inherit;
+  font-size: 0.75rem;
+  background: transparent;
+  border: none;
+  color: var(--glfm-muted);
+  cursor: pointer;
+  padding: 0.1rem 0.3rem;
+}
+
+.glfm-editor__code-language:hover,
+.glfm-editor__code-copy:hover {
+  color: var(--glfm-fg);
+}
+
+.glfm-editor__code-language-input {
+  display: block;
+  width: 100%;
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border: none;
+  border-bottom: 1px solid var(--glfm-border);
+  outline: none;
+}
+
+.glfm-editor__code-source {
+  margin: 0;
+  padding: 0.5rem;
+  font-family: var(--glfm-mono);
+  font-size: 0.78rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  outline: none;
+}
+
+/* --------------------------------------------------------------- 公式 */
+
+.glfm-editor__math-node {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.glfm-editor__math-node--block {
+  display: flex;
+  justify-content: center;
+  padding: 0.4rem 0;
+}
+
+.glfm-editor__math-content {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.glfm-editor__math--error {
+  color: #c62828;
+  font-family: var(--glfm-mono);
+}
+
+.glfm-editor__math-edit,
+.glfm-editor__mermaid-edit {
+  font: inherit;
+  font-size: 0.7rem;
+  border: 1px solid var(--glfm-border);
+  border-radius: var(--glfm-radius);
+  background: var(--glfm-bg);
+  cursor: pointer;
+  padding: 0 0.3rem;
+  opacity: 0.7;
+}
+
+.glfm-editor__math-node:hover .glfm-editor__math-edit,
+.glfm-editor__mermaid-node:hover .glfm-editor__mermaid-edit {
+  opacity: 1;
+}
+
+/* ------------------------------------------------------------- Mermaid */
+
+.glfm-editor__mermaid-node {
+  border: 1px solid var(--glfm-border);
+  border-radius: var(--glfm-radius);
+  margin: 0.6em 0;
+}
+
+.glfm-editor__mermaid-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-bottom: 1px solid var(--glfm-border);
+  font-size: 0.75rem;
+}
+
+.glfm-editor__mermaid {
+  padding: 0.5rem;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.glfm-editor__mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.glfm-editor__mermaid-fallback {
+  margin: 0;
+  padding: 0.5rem;
+  font-family: var(--glfm-mono);
+  font-size: 0.78rem;
+  overflow-x: auto;
+}
+
+.glfm-editor__mermaid-error {
+  margin: 0;
+  padding: 0 0.5rem 0.4rem;
+  color: #c62828;
+  font-size: 0.75rem;
+}
+
+/* ------------------------------------------------------------- 折叠块 */
+
+.glfm-editor__details {
+  border: 1px solid var(--glfm-border);
+  border-radius: var(--glfm-radius);
+  padding: 0.3rem 0.5rem;
+  margin: 0.6em 0;
+}
+
+.glfm-editor__details-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--glfm-muted);
+  margin-bottom: 0.2rem;
+}
+
+.glfm-editor__details-toggle {
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--glfm-border);
+  border-radius: var(--glfm-radius);
+  background: var(--glfm-bg);
+  cursor: pointer;
+}
+
+.glfm-editor__details-body summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------- 弹窗 */
+
+.glfm-editor__dialog {
+  margin-top: 0.4rem;
+  padding: 0.5rem;
+  border: 1px solid var(--glfm-border);
+  border-radius: var(--glfm-radius);
+  background: var(--glfm-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.glfm-editor__dialog--modal {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.glfm-editor__dialog-panel {
+  background: var(--glfm-bg);
+  border-radius: var(--glfm-radius);
+  padding: 0.9rem;
+  width: min(28rem, 92vw);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.glfm-editor__dialog-title {
+  font-weight: 700;
+  margin: 0 0 0.3rem;
+}
+
+.glfm-editor__dialog-label {
+  font-size: 0.75rem;
+  color: var(--glfm-muted);
+}
+
+.glfm-editor__dialog-input {
+  font: inherit;
+  font-family: var(--glfm-mono);
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--glfm-border);
+  border-radius: var(--glfm-radius);
+  background: var(--glfm-bg);
+  color: inherit;
+  resize: vertical;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.glfm-editor__dialog-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+}
+
+/* -------------------------------------------------------- 源码模式与预览 */
+
+.glfm-editor__source-mode {
+  display: block;
+  width: 100%;
+  min-height: 20rem;
+  padding: 0.8rem;
+  border: none;
+  outline: none;
+  resize: vertical;
+  font-family: var(--glfm-mono);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  background: var(--glfm-bg);
+  color: inherit;
+  box-sizing: border-box;
+}
+
+.glfm-editor__status,
+.glfm-editor__preview-error {
+  margin: 0;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.78rem;
+  color: var(--glfm-muted);
+  background: var(--glfm-code-bg);
+  border-bottom: 1px solid var(--glfm-border);
+}
+
+.glfm-editor__preview-error {
+  color: #c62828;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.glfm-editor__preview-host {
+  padding: 0.8rem;
+}
+
+.glfm-editor__preview > * + * {
+  margin-top: 0.6em;
+}
+
+.glfm-editor__preview blockquote {
+  border-left: 4px solid var(--glfm-border);
+  margin: 0.6em 0;
+  padding-left: 0.8rem;
+  color: var(--glfm-muted);
+}
+
+.glfm-editor__table-wrapper {
+  overflow-x: auto;
+}
+
+.glfm-editor__preview table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.glfm-editor__preview th,
+.glfm-editor__preview td {
+  border: 1px solid var(--glfm-border);
+  padding: 0.3rem 0.5rem;
+}
+
+.glfm-editor__preview th {
+  background: var(--glfm-code-bg);
+  font-weight: 600;
+}
+
+.glfm-editor__preview .admonition {
+  border-left: 4px solid var(--glfm-accent);
+  border-radius: var(--glfm-radius);
+  padding: 0.5rem 0.7rem;
+  background: color-mix(in srgb, var(--glfm-accent) 6%, transparent);
+  margin: 0.8em 0;
+}
+
+.glfm-editor__preview .admonition.tip { border-left-color: #00bfa5; }
+.glfm-editor__preview .admonition.important { border-left-color: #7c4dff; }
+.glfm-editor__preview .admonition.warning { border-left-color: #ff9100; }
+.glfm-editor__preview .admonition.caution { border-left-color: #ff5252; }
+
+.glfm-editor__preview .admonition-title {
+  font-weight: 700;
+  margin: 0 0 0.2rem;
+}
+
+.glfm-editor__preview .glfm-editor__code {
+  position: relative;
+  border: 1px solid var(--glfm-border);
+  border-radius: var(--glfm-radius);
+  background: var(--glfm-code-bg);
+  overflow: hidden;
+  margin: 0.8em 0;
+}
+
+.glfm-editor__preview .glfm-editor__code-language {
+  display: block;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.7rem;
+  color: var(--glfm-muted);
+  border-bottom: 1px solid var(--glfm-border);
+}
+
+.glfm-editor__preview .glfm-editor__code-copy {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.4rem;
+  font: inherit;
+  font-size: 0.7rem;
+  border: 1px solid var(--glfm-border);
+  border-radius: var(--glfm-radius);
+  background: var(--glfm-bg);
+  cursor: pointer;
+  padding: 0 0.3rem;
+}
+
+.glfm-editor__preview .glfm-editor__code pre {
+  margin: 0;
+  padding: 0.5rem;
+  overflow-x: auto;
+  font-family: var(--glfm-mono);
+  font-size: 0.78rem;
+}
+
+.glfm-editor__preview .glfm-editor__math--block {
+  overflow-x: auto;
+  text-align: center;
+  margin: 0.8em 0;
+}
+
+.glfm-editor__preview .glfm-editor__math--inline {
+  overflow-x: auto;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.glfm-editor__preview .glfm-editor__mermaid {
+  overflow-x: auto;
+  text-align: center;
+  margin: 0.8em 0;
+}
+
+.glfm-editor__preview .glfm-editor__mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.glfm-editor__preview img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 代码高亮：使用 lowlight 的类名，与 Material 的配色变量协调。 */
+.glfm-editor .hljs-comment,
+.glfm-editor .hljs-quote { color: var(--glfm-muted); font-style: italic; }
+.glfm-editor .hljs-keyword,
+.glfm-editor .hljs-selector-tag,
+.glfm-editor .hljs-literal { color: #7c4dff; }
+.glfm-editor .hljs-string,
+.glfm-editor .hljs-attr { color: #2e7d32; }
+.glfm-editor .hljs-number,
+.glfm-editor .hljs-built_in { color: #ef6c00; }
+.glfm-editor .hljs-title,
+.glfm-editor .hljs-function { color: #1565c0; }
+.glfm-editor .hljs-variable,
+.glfm-editor .hljs-name { color: #ad1457; }

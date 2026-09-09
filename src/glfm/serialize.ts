@@ -438,13 +438,10 @@ function renderDetails(node: ProseMirrorNode, options: SerializeOptions): string
   const eol = options.eol ?? '\n';
   const parts: string[] = [`<details${node.attrs.open ? ' open' : ''}>`];
 
-  node.forEach((child, _offset, index) => {
-    if (child.type.name !== 'detailsContent') return;
-    if (index === 0) {
-      // 第一段内容作为 summary 标题，只取行内写法。
-      const title = child.firstChild;
-      parts.push(`<summary>${title ? serializeInline(title) : ''}</summary>`);
-    } else {
+  node.forEach((child) => {
+    if (child.type.name === 'detailsSummary') {
+      parts.push(`<summary>${serializeInline(child)}</summary>`);
+    } else if (child.type.name === 'detailsContent') {
       const body = renderBlocks(child, options);
       if (body !== '') parts.push(body);
     }

@@ -100,7 +100,22 @@ export const GlfmAlert = Node.create({
   },
 });
 
-/** 折叠块内容：`<details>` 内的一段内容。 */
+/** 折叠块标题：对应 `<summary>`，只承载行内内容。 */
+export const GlfmDetailsSummary = Node.create({
+  name: 'detailsSummary',
+  content: 'inline*',
+  defining: true,
+
+  parseHTML() {
+    return [{ tag: 'summary' }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['summary', mergeAttributes(HTMLAttributes), 0];
+  },
+});
+
+/** 折叠块正文：对应 `<details>` 内除 `<summary>` 之外的内容。 */
 export const GlfmDetailsContent = Node.create({
   name: 'detailsContent',
   content: 'block+',
@@ -118,11 +133,11 @@ export const GlfmDetailsContent = Node.create({
 /**
  * 折叠块：`<details><summary>标题</summary>正文</details>`。
  *
- * 第一个 `detailsContent` 承载 `<summary>` 的标题，其余承载正文。
+ * `open` 保存源码中的展开状态；编辑时的临时展开不写入文档。
  */
 export const GlfmDetails = Node.create({
   name: 'details',
-  content: 'detailsContent+',
+  content: 'detailsSummary detailsContent*',
   group: 'block',
   defining: true,
   isolating: true,
@@ -153,14 +168,8 @@ export const GlfmDetails = Node.create({
           commands.insertContent({
             type: this.name,
             content: [
-              {
-                type: 'detailsContent',
-                content: [{ type: 'paragraph' }],
-              },
-              {
-                type: 'detailsContent',
-                content: [{ type: 'paragraph' }],
-              },
+              { type: 'detailsSummary' },
+              { type: 'detailsContent', content: [{ type: 'paragraph' }] },
             ],
           }),
     };
