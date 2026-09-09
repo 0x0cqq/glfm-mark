@@ -1,0 +1,10 @@
+node_modules/
+dist/
+site/
+.venv/
+__pycache__/
+*.pyc
+test-results/
+playwright-report/
+.vite/
+fixtures/generated/
