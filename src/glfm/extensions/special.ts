@@ -37,7 +37,8 @@ export const GlfmMathInline = Node.create({
   },
 
   parseHTML() {
-    return [{ tag: 'code[data-math-style="inline"]' }];
+    // 优先级高于普通 code 标记，避免行内公式被当作代码。
+    return [{ tag: 'code[data-math-style="inline"]', priority: 70 }];
   },
 
   renderHTML({ node, HTMLAttributes }) {
@@ -73,6 +74,7 @@ export const GlfmMathBlock = Node.create({
     return [
       {
         tag: 'pre',
+        priority: 70,
         getAttrs: (element) => {
           if (!(element instanceof HTMLElement)) return false;
           const code = element.querySelector('code');
@@ -86,7 +88,9 @@ export const GlfmMathBlock = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    const { info, ...rest } = HTMLAttributes;
+    const { info, sourceId, ...rest } = HTMLAttributes;
+    void info;
+    void sourceId;
     return [
       'pre',
       mergeAttributes(rest, { 'data-math-block': '' }),
@@ -115,6 +119,7 @@ export const GlfmMermaidBlock = Node.create({
     return [
       {
         tag: 'pre',
+        priority: 70,
         getAttrs: (element) => {
           if (!(element instanceof HTMLElement)) return false;
           const code = element.querySelector('code');
@@ -128,7 +133,9 @@ export const GlfmMermaidBlock = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    const { info, ...rest } = HTMLAttributes;
+    const { info, sourceId, ...rest } = HTMLAttributes;
+    void info;
+    void sourceId;
     return [
       'pre',
       mergeAttributes(rest, { 'data-mermaid-block': '' }),

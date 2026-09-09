@@ -5,6 +5,7 @@
  */
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
+import { EditorContent } from '@tiptap/vue-3';
 import type { Editor } from '@tiptap/core';
 import { GlfmEditorCore } from '../core/editor';
 import { editorExtensions } from '../core/extensions';
@@ -40,9 +41,9 @@ const emit = defineEmits<{
   (event: 'saved'): void;
 }>();
 
-const host = ref<HTMLElement | null>(null);
 const core = shallowRef<GlfmEditorCore | null>(null);
 const editor = shallowRef<Editor | null>(null);
+const editorKey = ref(0);
 const state = ref<EditorState>({
   mode: props.initialMode,
   dirty: false,
@@ -66,7 +67,7 @@ onMounted(async () => {
     services: props.services,
     readonly: props.readonly,
     initialMode: props.initialMode,
-    element: host.value,
+    element: null,
     extensions: editorExtensions,
     callbacks: {
       onUpdate: (markdown) => {
@@ -88,6 +89,7 @@ onMounted(async () => {
 
   await instance.load(props.modelValue);
   sourceText.value = instance.getSourceMarkdown();
+  editorKey.value += 1;
 });
 
 /** 更新工具栏中的块样式。 */
@@ -327,7 +329,9 @@ const showPreview = computed(() => state.value.mode === 'preview');
       正在解析文档…
     </p>
 
-    <div v-show="showEditor" ref="host" class="glfm-editor__content" data-testid="editor-content" />
+    <div v-show="showEditor" class="glfm-editor__content" data-testid="editor-content">
+      <EditorContent v-if="editor" :key="editorKey" :editor="editor" />
+    </div>
 
     <SourceEditor
       v-if="showSource"

@@ -4,8 +4,8 @@
  * 对外只暴露 Markdown 字符串；ProseMirror 文档是内部编辑状态。
  * Vue 组件与静态挂载入口共用这一层，避免两套状态逻辑。
  */
-import { Editor } from '@tiptap/core';
 import { getSchema } from '@tiptap/core';
+import { Editor } from '@tiptap/vue-3';
 import type { Node as ProseMirrorNode, Schema } from '@tiptap/pm/model';
 import { glfmExtensions } from '../glfm/schema';
 import { createGlfmSerializer, type GlfmSerializer } from '../glfm/serialize';
@@ -80,11 +80,11 @@ export class GlfmEditorCore {
     };
 
     this.editor = new Editor({
-      element: options.element ?? undefined,
       editable: !options.readonly,
       extensions,
       content: '',
       onUpdate: () => this.handleUpdate(),
+      ...(options.element ? { element: options.element } : {}),
     });
   }
 

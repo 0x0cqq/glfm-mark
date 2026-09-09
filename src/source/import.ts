@@ -174,23 +174,34 @@ export async function importMarkdown(
   if (ranges.length === 0) {
     return buildDegradedResult(markdown, schema, defaultEol);
   }
-
   const blocks: SourceBlock[] = [];
   const gaps: string[] = [];
   const nodes: ProseMirrorNode[] = [];
   let cursor = 0;
+  /** 下一个块之前的待定间隔文本。 */
+  let pendingGap = '';
 
-  /** 处理两个源码块之间的剩余区间：空白记入间隔，有内容则成为源码保留块。 */
+  /** 把待定间隔写入 gaps。 */
+  const flushGap = () => {
+    gaps.push(pendingGap);
+    pendingGap = '';
+  };
+
+  /**
+   * 处理两个已识别块之间的剩余区间。
+   *
+   * 空白累计到间隔；含有实际内容时成为源码保留块，保证内容不丢失。
+   */
   const consumeGap = (from: number, to: number) => {
     const raw = markdown.slice(from, to);
     if (isBlank(raw)) {
-      gaps.push(raw);
+      pendingGap += raw;
       return;
     }
 
+    flushGap();
     const id = nextSourceId();
     const node = createSourceBlock(schema, raw, id, 'unrendered');
-    gaps.push('');
     blocks.push({ id, from, to, raw, initialSemantic: semanticSnapshot(node) });
     nodes.push(node);
   };
@@ -206,6 +217,8 @@ export async function importMarkdown(
     if (!block) {
       return buildDegradedResult(markdown, schema, defaultEol);
     }
+
+    flushGap();
 
     const raw = markdown.slice(range.from, range.to);
     const id = nextSourceId();
@@ -223,6 +236,7 @@ export async function importMarkdown(
   }
 
   consumeGap(cursor, markdown.length);
+  flushGap();
 
   const doc = schema.topNodeType.create(null, nodes);
   const baseline: SourceBaseline = { markdown, blocks, gaps, defaultEol };

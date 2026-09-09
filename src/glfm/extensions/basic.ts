@@ -40,6 +40,7 @@ export const GlfmBlockquote = Blockquote.extend({
       ...this.parent?.(),
       multiline: {
         default: false,
+        rendered: false,
       },
     };
   },
@@ -77,16 +78,18 @@ export const GlfmCodeBlock = CodeBlock.extend({
     };
   },
   renderHTML({ node, HTMLAttributes }) {
+    const { sourceId, langParams, ...rest } = HTMLAttributes;
+    void sourceId;
+    void langParams;
+
     const language = (node.attrs.language as string | null) ?? '';
-    const attrs: Record<string, string> = {};
-    if (language) {
-      attrs['data-lang'] = language;
-      attrs.class = `language-${language}`;
-    }
+    const codeAttrs: Record<string, string> = {};
+    if (language) codeAttrs.class = `language-${language}`;
+
     return [
       'pre',
-      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, { 'data-lang': language }),
-      ['code', attrs, 0],
+      mergeAttributes(this.options.HTMLAttributes, rest, { 'data-lang': language }),
+      ['code', codeAttrs, 0],
     ];
   },
 });

@@ -33,7 +33,8 @@ export const GlfmAlertTitle = Node.create({
   selectable: false,
 
   parseHTML() {
-    return [{ tag: 'p.markdown-alert-title' }];
+    // 优先级高于普通段落，避免被通用 `p` 规则抢先匹配。
+    return [{ tag: 'p.markdown-alert-title', priority: 70 }];
   },
 
   renderHTML({ HTMLAttributes }) {
@@ -72,11 +73,15 @@ export const GlfmAlert = Node.create({
     return [{ tag: 'div.markdown-alert' }];
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ node, HTMLAttributes }) {
+    const { type, sourceId, ...rest } = HTMLAttributes;
+    void type;
+    void sourceId;
+
     return [
       'div',
-      mergeAttributes(HTMLAttributes, {
-        class: `markdown-alert markdown-alert-${HTMLAttributes.type ?? 'note'}`,
+      mergeAttributes(rest, {
+        class: `markdown-alert markdown-alert-${node.attrs.type ?? 'note'}`,
       }),
       0,
     ];
@@ -216,7 +221,9 @@ export const GlfmTaskItem = TaskItem.extend({
         keepOnSplit: false,
         parseHTML: (element) => {
           const input = element.querySelector('input[type="checkbox"]');
-          return input instanceof HTMLInputElement ? input.checked : false;
+          if (input instanceof HTMLInputElement) return input.checked;
+          const dataChecked = element.getAttribute('data-checked');
+          return dataChecked === '' || dataChecked === 'true';
         },
       },
       inapplicable: {
@@ -224,14 +231,59 @@ export const GlfmTaskItem = TaskItem.extend({
         keepOnSplit: false,
         parseHTML: (element) => {
           const input = element.querySelector('input[type="checkbox"]');
-          return input instanceof HTMLInputElement && input.hasAttribute('data-inapplicable');
+          if (input instanceof HTMLInputElement) return input.hasAttribute('data-inapplicable');
+          return element.hasAttribute('data-inapplicable');
         },
       },
     };
   },
+
+  parseHTML() {
+    // GitLab 输出 `li.task-list-item`，并在其中放置 checkbox。
+    return [{ tag: 'li.task-list-item', priority: 60 }];
+  },
+
+  renderHTML({ node, HTMLAttributes }) {
+    const { checked, inapplicable, sourceId, ...rest } = HTMLAttributes;
+    void checked;
+    void inapplicable;
+    void sourceId;
+
+    const attributes: Record<string, unknown> = {
+      ...rest,
+      'data-type': this.name,
+      class: 'glfm-editor__task-item',
+    };
+
+    return [
+      'li',
+      attributes,
+      [
+        'label',
+        [
+          'input',
+          {
+            type: 'checkbox',
+            checked: node.attrs.checked ? 'checked' : null,
+            'data-inapplicable': node.attrs.inapplicable ? '' : null,
+          },
+        ],
+        ['span'],
+      ],
+      ['div', 0],
+    ];
+  },
 });
 
-/** 任务列表。 */
-export const GlfmTaskList = TaskList;
+/** 任务列表：匹配 GitLab 的 `ul.task-list` / `ol.contains-task-list`。 */
+export const GlfmTaskList = TaskList.extend({
+  parseHTML() {
+    return [
+      { tag: 'ul.task-list', priority: 60 },
+      { tag: 'ul.contains-task-list', priority: 60 },
+      { tag: 'ol.contains-task-list', priority: 60 },
+    ];
+  },
+});
 
 export { DEFAULT_ALERT_TITLES };

@@ -9,7 +9,8 @@ import { NodeViewContent, NodeViewWrapper, nodeViewProps } from '@tiptap/vue-3';
 
 const props = defineProps(nodeViewProps);
 
-const expanded = ref(props.node.attrs.open as boolean);
+/** 临时展开状态；默认展开以便编辑，不写入文档。 */
+const expanded = ref(true);
 
 /** 源码中的 open 状态，导出时使用。 */
 const openAttr = computed(() => Boolean(props.node.attrs.open));

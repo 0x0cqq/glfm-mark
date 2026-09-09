@@ -249,6 +249,34 @@ describe('降级与容错', () => {
 
     expect(env.controller.export(result.doc)).toBe(markdown);
   });
+
+  it('块之间的非空白区间成为源码保留块且顺序正确', async () => {
+    const env = createEnv();
+    // 引用式链接定义不会被渲染成块，位于两个段落之间。
+    const markdown = [
+      '第一段。',
+      '',
+      '[ref]: https://example.com',
+      '',
+      '第二段。',
+      '',
+    ].join('\n');
+
+    const result = await env.controller.load(markdown, async () => ({
+      // 中文每字 3 字节，sourcepos 列号按字节计算。
+      html: [
+        '<p data-sourcepos="1:1-1:12">第一段。</p>',
+        '<p data-sourcepos="5:1-5:12">第二段。</p>',
+      ].join('\n'),
+    }));
+
+    expect(result.degraded).toBe(false);
+    expect(result.doc.childCount).toBe(3);
+    expect(result.doc.child(1).type.name).toBe('sourceBlock');
+    // 源码块保留包含周边空白的原始区间，导出时原样复用。
+    expect(result.doc.child(1).textContent).toContain('[ref]: https://example.com');
+    expect(env.controller.export(result.doc)).toBe(markdown);
+  });
 });
 
 describe('块身份', () => {

@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
 import { nextTick } from 'vue';
 import GlfmEditor from '../src/components/GlfmEditor.vue';
-import type { DocumentContext, EditorServices } from '../src/core/types';
+import type { DocumentContext, EditorServices, EditorState } from '../src/core/types';
 import { createFixtureRenderer } from './fixtures/renderer';
 import { resetSourceIdCounter } from '../src/source/source-id';
 
@@ -187,25 +187,34 @@ describe('编辑器组件', () => {
   });
 
   it('保存期间继续编辑，成功后仍为未保存状态', async () => {
-    let resolveSave: (() => void) | null = null;
+    let releaseSave: (() => void) | undefined;
     const saveMarkdown = vi.fn(
       () =>
         new Promise<void>((resolve) => {
-          resolveSave = resolve;
+          releaseSave = resolve;
         }),
     );
 
     const wrapper = await mountEditor('# 标题\n', createServices({ saveMarkdown }));
+
     await wrapper.find('[data-testid="toolbar-save"]').trigger('click');
     await nextTick();
 
-    // 保存期间修改文档。
-    const handle = wrapper.vm as unknown as { markSaved(markdown: string): void };
-    handle.markSaved('# 标题\n');
+    // 保存期间继续编辑：文档与已保存快照不同，保存成功后仍应为未保存状态。
+    const editor = getEditor(wrapper) as {
+      chain: () => { insertContentAt: (pos: number, value: string) => { run(): boolean } };
+    };
+    editor.chain().insertContentAt(3, '新内容').run();
+    await nextTick();
 
-    resolveSave?.();
+    releaseSave?.();
     await vi.waitFor(() => expect(saveMarkdown).toHaveBeenCalled());
+    await nextTick();
 
+    const states = wrapper.emitted('state-change') as [EditorState][] | undefined;
+    const last = states?.[states.length - 1]?.[0];
+    expect(last?.saving).toBe(false);
+    expect(last?.dirty).toBe(true);
     wrapper.unmount();
   });
 
