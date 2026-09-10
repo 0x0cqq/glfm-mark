@@ -204,11 +204,31 @@ export const GlfmTableHeader = TableHeader.extend({
 /** 表格行。 */
 export const GlfmTableRow = TableRow;
 
-/** 表格。 */
+/** 表格：输出干净的 `<table>`，不带编辑器专用的宽度与包装。 */
 export const GlfmTable = Table.extend({
   content: 'tableRow+',
+
+  addOptions() {
+    return {
+      ...this.parent?.(),
+      // 不启用列宽拖拽，避免向展示 DOM 写入 `width: 0px` 等编辑器专用样式。
+      resizable: false,
+      renderWrapper: false,
+    } as ReturnType<NonNullable<typeof this.parent>>;
+  },
+
   addAttributes() {
     return {};
+  },
+
+  addNodeView() {
+    return null;
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    const { sourceId, ...rest } = HTMLAttributes;
+    void sourceId;
+    return ['table', mergeAttributes(rest), ['tbody', 0]];
   },
 });
 

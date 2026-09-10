@@ -101,6 +101,10 @@ function enhanceCodeBlocks(root: ParentNode): void {
     const pre = code.parentElement;
     if (!pre) return;
 
+    // 公式与图表已由各自的处理流程替换，这里跳过。
+    if (code.hasAttribute('data-math-style') || code.classList.contains('language-math')) return;
+    if (code.classList.contains('language-mermaid')) return;
+
     const language =
       [...code.classList]
         .find((name) => name.startsWith('language-'))

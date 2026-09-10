@@ -14,6 +14,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['tests/**/*.spec.ts'],
+    exclude: ['tests/visual/**'],
     globals: true,
     restoreMocks: true,
     testTimeout: 20000,

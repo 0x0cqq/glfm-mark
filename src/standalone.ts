@@ -5,6 +5,7 @@
  * 离开页面时调用返回句柄的 `destroy()` 释放组件、监听器和未完成请求。
  */
 import { createApp, h, ref, type App } from 'vue';
+import './styles/style.css';
 import GlfmEditor from './components/GlfmEditor.vue';
 import type {
   DocumentContext,

@@ -6,6 +6,8 @@
  * 提供局部基础样式。
  */
 
+@import 'katex/dist/katex.min.css';
+
 .glfm-editor {
   --glfm-border: var(--md-default-fg-color--lightest, #d8d8d8);
   --glfm-bg: var(--md-default-bg-color, #ffffff);
@@ -142,6 +144,16 @@
 .glfm-editor__content table {
   border-collapse: collapse;
   width: 100%;
+  table-layout: auto;
+}
+
+.glfm-editor__content .tableWrapper {
+  overflow-x: auto;
+}
+
+.glfm-editor__content table[style] {
+  /* 编辑器内部可能写入宽度，用样式表覆盖以免表格塌陷。 */
+  width: 100% !important;
 }
 
 .glfm-editor__content th,

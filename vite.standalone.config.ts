@@ -9,6 +9,10 @@ const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
  */
 export default defineConfig({
   plugins: [vue()],
+  define: {
+    // 静态挂载产物直接运行在浏览器中，没有 Node 的 process 全局变量。
+    'process.env.NODE_ENV': JSON.stringify('production'),
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: false,

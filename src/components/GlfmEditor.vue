@@ -5,8 +5,7 @@
  */
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import { EditorContent } from '@tiptap/vue-3';
-import type { Editor } from '@tiptap/core';
+import { EditorContent, type Editor } from '@tiptap/vue-3';
 import { GlfmEditorCore } from '../core/editor';
 import { editorExtensions } from '../core/extensions';
 import type {
@@ -330,7 +329,8 @@ const showPreview = computed(() => state.value.mode === 'preview');
     </p>
 
     <div v-show="showEditor" class="glfm-editor__content" data-testid="editor-content">
-      <EditorContent v-if="editor" :key="editorKey" :editor="editor" />
+      <!-- `md-typeset` 让编辑区在 Material 宿主中继承阅读排版；无 Material 样式时无影响。 -->
+      <EditorContent v-if="editor" :key="editorKey" class="md-typeset glfm-editor__typeset" :editor="editor" />
     </div>
 
     <SourceEditor
