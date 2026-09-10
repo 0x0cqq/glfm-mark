@@ -388,6 +388,21 @@ function renderTaskList(node: ProseMirrorNode, options: SerializeOptions): strin
   return items.join('\n');
 }
 
+/**
+ * 序列化表格单元格的内容。
+ *
+ * 单元格内部是块内容（通常是单个段落），导出只取行内写法；
+ * 多个块之间用 `<br>` 连接，符合“单元格只允许行内内容”的约定。
+ */
+function serializeCell(cell: ProseMirrorNode): string {
+  const parts: string[] = [];
+  cell.forEach((child, _offset, index) => {
+    if (index > 0) parts.push('<br>');
+    parts.push(child.isTextblock ? serializeInline(child) : child.textContent);
+  });
+  return parts.join('').replace(/\|/g, '\\|');
+}
+
 /** 表格：输出 GLFM 管道表格。 */
 function renderTable(node: ProseMirrorNode, options: SerializeOptions): string {
   const eol = options.eol ?? '\n';
@@ -402,7 +417,7 @@ function renderTable(node: ProseMirrorNode, options: SerializeOptions): string {
     const cells: string[] = [];
     row.forEach((cell, _cellOffset, cellIndex) => {
       if (rowIndex === 0) aligns[cellIndex] = (cell.attrs.align as string | null) ?? null;
-      cells.push(serializeInline(cell).replace(/\|/g, '\\|'));
+      cells.push(serializeCell(cell));
     });
     rendered.push(cells);
   });

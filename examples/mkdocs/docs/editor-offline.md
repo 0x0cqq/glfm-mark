@@ -15,8 +15,12 @@
 ```html
 <div id="glfm-editor"></div>
 <link rel="stylesheet" href="../glfm-mark/standalone.css" />
+<link rel="stylesheet" href="../glfm-mark/katex.css" />
 <script type="module" src="../assets/offline-example.js"></script>
 ```
+
+公式排版依赖 KaTeX 样式。发布包提供 `katex.css` 与 `fonts/`，由宿主页面引入，
+不依赖 CDN。
 
 示例脚本 `assets/offline-example.js` 加载 `assets/fixtures.json`，把内置 Markdown
 映射到预生成 HTML，并调用 `mountGlfmEditor`。
@@ -28,4 +32,5 @@
 <p id="glfm-status" class="glfm-example-status"></p>
 
 <link rel="stylesheet" href="../glfm-mark/standalone.css" />
+<link rel="stylesheet" href="../glfm-mark/katex.css" />
 <script type="module" src="../assets/offline-example.js"></script>

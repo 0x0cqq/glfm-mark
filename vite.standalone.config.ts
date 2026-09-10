@@ -19,6 +19,8 @@ export default defineConfig({
     sourcemap: true,
     target: 'es2022',
     modulePreload: { polyfill: false },
+    // 字体独立成文件：内联会把 KaTeX 字体变成 base64，使 CSS 膨胀到 1.4MB。
+    assetsInlineLimit: 0,
     lib: {
       entry: r('src/standalone.ts'),
       formats: ['es'],

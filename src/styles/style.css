@@ -4,9 +4,10 @@
  * 全部编辑控件使用 `glfm-editor__*` 前缀，不覆盖宿主的全局标题、表格或按钮样式。
  * 宿主存在 Material 样式时继承 `.md-typeset` 与 `--md-*` 变量；独立演示页
  * 提供局部基础样式。
+ *
+ * 公式排版依赖宿主引入 KaTeX 样式：发布包提供 `katex.css` 与 `fonts/`，
+ * 需通过 `<link rel="stylesheet" href=".../katex.css">` 引入，不依赖 CDN。
  */
-
-@import 'katex/dist/katex.min.css';
 
 .glfm-editor {
   --glfm-border: var(--md-default-fg-color--lightest, #d8d8d8);
@@ -28,6 +29,10 @@
   line-height: 1.6;
   display: flex;
   flex-direction: column;
+  /* 组件自身不超出宿主容器宽度。 */
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .glfm-editor--readonly {
@@ -49,12 +54,26 @@
   z-index: 2;
 }
 
+.glfm-editor__toolbar,
+.glfm-editor__content,
+.glfm-editor__source-mode,
+.glfm-editor__preview-host,
+.glfm-editor__details-body {
+  /* 编辑区不引入自身横向滚动，溢出交给表格、代码与公式容器处理。 */
+  min-width: 0;
+  max-width: 100%;
+}
+
 .glfm-editor__toolbar-group {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.15rem;
   padding-right: 0.35rem;
   border-right: 1px solid var(--glfm-border);
+  /* 窄屏下单个分组也要能换行，否则会撑破工具栏。 */
+  max-width: 100%;
+  min-width: 0;
 }
 
 .glfm-editor__toolbar-group--end {
@@ -460,7 +479,22 @@
   cursor: pointer;
 }
 
+/*
+ * 覆盖 Tiptap NodeViewContent 施加的内联 `white-space: pre-wrap`，并消除宿主
+ * （如 Material）给 `summary` 加的排版内边距：两者叠加会让 details 内容在窄屏横向溢出。
+ */
+.glfm-editor__details-body {
+  min-width: 0;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+}
+
 .glfm-editor__details-body summary {
+  box-sizing: border-box;
+  display: block;
+  max-width: 100%;
+  padding: 0;
+  white-space: normal;
   cursor: pointer;
   font-weight: 600;
 }

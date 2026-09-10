@@ -9,22 +9,39 @@
 
 ## 构建与预览
 
+在仓库根目录执行：
+
 ```bash
-# 1. 生成离线示例 fixture 与构建产物（在仓库根目录执行）
+# 1. 生成离线示例 fixture
 npm run fixtures
+
+# 2. 构建发布产物（含独立的 KaTeX 样式与字体）
 npm run build
 
-# 2. 把构建产物复制到示例站点
-cp dist/standalone.js dist/standalone.css examples/mkdocs/docs/assets/
+# 3. 把产物复制到示例站点
+mkdir -p examples/mkdocs/docs/glfm-mark
+cp -r dist/standalone.js dist/standalone.css dist/katex.css dist/assets dist/fonts \
+  examples/mkdocs/docs/glfm-mark/
 
-# 3. 构建并启动 MkDocs
+# 4. 参考页也需要 KaTeX 样式与字体
+mkdir -p examples/mkdocs/docs/assets/vendor/katex
+cp -r node_modules/katex/dist/katex.min.js node_modules/katex/dist/auto-render.min.js \
+  node_modules/katex/dist/katex.min.css node_modules/katex/dist/fonts \
+  examples/mkdocs/docs/assets/vendor/katex/
+
+# 5. 构建并启动 MkDocs
 .venv/Scripts/python -m mkdocs build --config-file examples/mkdocs/mkdocs.yml
 .venv/Scripts/python -m mkdocs serve --config-file examples/mkdocs/mkdocs.yml
 ```
 
 站点默认地址为 <http://127.0.0.1:8000/>。
 
+第 3、4 步的产物不入库（见 `.gitignore`），需要首次构建时手动执行一次。
+
 ## 说明
 
 MkDocs 构建流程保持原状：本示例不修改 Python 扩展或构建语法，也不让站点自动
 获得全部 GLFM 能力。编辑器只负责在页面中提供编辑与预览。
+
+发布包不内联 KaTeX 样式与字体，宿主页面需要引入 `katex.css`，字体随站点一起
+部署，不依赖 CDN。

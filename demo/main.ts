@@ -6,6 +6,8 @@
 import { createApp, h, ref } from 'vue';
 import GlfmEditor from '../src/components/GlfmEditor.vue';
 import '../src/styles/style.css';
+// 发布包不内联 KaTeX 样式，演示页自行引入以保证公式排版正确。
+import 'katex/dist/katex.min.css';
 import { createFixtureRenderer } from '../tests/fixtures/renderer';
 import { demoMarkdown } from './demo-markdown';
 

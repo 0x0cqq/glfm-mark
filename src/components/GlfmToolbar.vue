@@ -24,7 +24,9 @@ const emit = defineEmits<{
   (event: 'save'): void;
   (event: 'upload', file: File): void;
   (event: 'insert-table'): void;
+  (event: 'table-action', action: TableAction): void;
   (event: 'insert-alert', type: AlertType): void;
+  (event: 'change-alert-type', type: AlertType): void;
   (event: 'insert-details'): void;
   (event: 'insert-code'): void;
   (event: 'insert-math'): void;
@@ -34,9 +36,37 @@ const emit = defineEmits<{
   (event: 'edit-image'): void;
 }>();
 
+/** 表格操作。 */
+export type TableAction =
+  | 'add-row-before'
+  | 'add-row-after'
+  | 'delete-row'
+  | 'add-column-before'
+  | 'add-column-after'
+  | 'delete-column'
+  | 'align-left'
+  | 'align-center'
+  | 'align-right'
+  | 'delete-table';
+
+/** 表格操作按钮定义。 */
+const TABLE_ACTIONS: { action: TableAction; label: string; title: string }[] = [
+  { action: 'add-row-after', label: '行+', title: '在下方插入行' },
+  { action: 'delete-row', label: '行−', title: '删除当前行' },
+  { action: 'add-column-after', label: '列+', title: '在右侧插入列' },
+  { action: 'delete-column', label: '列−', title: '删除当前列' },
+  { action: 'align-left', label: '左', title: '左对齐本列' },
+  { action: 'align-center', label: '中', title: '居中对齐本列' },
+  { action: 'align-right', label: '右', title: '右对齐本列' },
+  { action: 'delete-table', label: '删表', title: '删除整个表格' },
+];
+
 const fileInput = ref<HTMLInputElement | null>(null);
 
 const disabled = computed(() => props.readonly || !props.editor);
+
+/** 光标是否位于表格中。 */
+const inTable = computed(() => props.editor?.isActive('table') ?? false);
 
 /** 执行编辑器命令。 */
 function run(command: (editor: Editor) => void) {
@@ -48,6 +78,9 @@ function run(command: (editor: Editor) => void) {
 function isActive(name: string, attrs?: Record<string, unknown>): boolean {
   return props.editor?.isActive(name, attrs) ?? false;
 }
+
+/** 当前是否为提示块。 */
+const inAlert = computed(() => props.editor?.isActive('alert') ?? false);
 
 /** 切换块样式。 */
 function setBlockStyle(event: Event) {
@@ -72,6 +105,13 @@ function handleFile(event: Event) {
 }
 
 const alertType = ref<AlertType>('note');
+
+/** 选择提示类型：光标在提示块内时切换类型，否则用于插入。 */
+function selectAlertType(event: Event) {
+  const value = (event.target as HTMLSelectElement).value as AlertType;
+  alertType.value = value;
+  if (inAlert.value) emit('change-alert-type', value);
+}
 </script>
 
 <template>
@@ -242,8 +282,8 @@ const alertType = ref<AlertType>('note');
         class="glfm-editor__select glfm-editor__select--narrow"
         data-testid="toolbar-alert-type"
         :disabled="disabled"
-        :value="alertType"
-        @change="alertType = ($event.target as HTMLSelectElement).value as AlertType"
+        :value="inAlert ? (editor?.getAttributes('alert').type as string) ?? alertType : alertType"
+        @change="selectAlertType"
       >
         <option v-for="type in ALERT_TYPES" :key="type" :value="type">
           {{ type.toUpperCase() }}
@@ -308,6 +348,21 @@ const alertType = ref<AlertType>('note');
         @click="emit('insert-horizontal-rule')"
       >
         ―
+      </button>
+    </div>
+
+    <div v-if="inTable" class="glfm-editor__toolbar-group" data-testid="toolbar-table-actions">
+      <button
+        v-for="item in TABLE_ACTIONS"
+        :key="item.action"
+        type="button"
+        class="glfm-editor__button"
+        :title="item.title"
+        :data-testid="`table-action-${item.action}`"
+        :disabled="disabled"
+        @click="emit('table-action', item.action)"
+      >
+        {{ item.label }}
       </button>
     </div>
 

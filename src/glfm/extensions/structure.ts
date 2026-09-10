@@ -181,21 +181,26 @@ export const GlfmDetails = Node.create({
   },
 });
 
-/** 表格单元格：只允许行内内容。 */
+/**
+ * 表格单元格。
+ *
+ * 内部使用块内容（单个段落），与 prosemirror-tables 的命令模型一致；
+ * 导出时只取段落内的行内内容。
+ */
 export const GlfmTableCell = TableCell.extend({
-  content: 'inline*',
   addAttributes() {
     return {
+      ...this.parent?.(),
       align: { default: null },
     };
   },
 });
 
-/** 表头单元格：只允许行内内容。 */
+/** 表头单元格。 */
 export const GlfmTableHeader = TableHeader.extend({
-  content: 'inline*',
   addAttributes() {
     return {
+      ...this.parent?.(),
       align: { default: null },
     };
   },

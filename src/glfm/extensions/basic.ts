@@ -15,7 +15,7 @@ import Bold from '@tiptap/extension-bold';
 import Italic from '@tiptap/extension-italic';
 import Strike from '@tiptap/extension-strike';
 import Code from '@tiptap/extension-code';
-import { BulletList, ListItem, OrderedList } from '@tiptap/extension-list';
+import { BulletList, ListItem, ListKeymap, OrderedList } from '@tiptap/extension-list';
 
 /** 段落：保留 `dir` 与 GitLab 的 `data-sourcepos` 供导入阶段读取。 */
 export const GlfmParagraph = Paragraph.extend({
@@ -68,6 +68,9 @@ export const GlfmOrderedList = OrderedList.extend({
 
 /** 列表项。 */
 export const GlfmListItem = ListItem;
+
+/** 列表键盘操作：Tab / Shift-Tab 缩进与取消缩进，Backspace 处理边界情况。 */
+export const GlfmListKeymap = ListKeymap;
 
 /** 代码块：保留语言与附加信息字符串。 */
 export const GlfmCodeBlock = CodeBlock.extend({

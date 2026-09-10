@@ -15,6 +15,8 @@ export default defineConfig({
     sourcemap: true,
     cssCodeSplit: false,
     target: 'es2022',
+    // 字体独立成文件，随站点一起部署，不依赖 CDN。
+    assetsInlineLimit: 0,
     lib: {
       entry: r('src/index.ts'),
       formats: ['es'],
@@ -24,6 +26,9 @@ export default defineConfig({
     rollupOptions: {
       external: ['vue'],
       output: {
+        // 按需加载的 Mermaid、KaTeX 与高亮代码统一放在 assets 子目录，
+        // 保持包根目录整洁。
+        chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: (info) => {
           const name = info.names?.[0] ?? info.name ?? '';
           if (name.endsWith('.css')) return 'style.css';

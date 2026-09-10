@@ -163,9 +163,101 @@ function insertTable() {
   );
 }
 
+/** 执行表格操作。 */
+function handleTableAction(action: string) {
+  run((instance) => {
+    const chain = instance.chain().focus();
+    switch (action) {
+      case 'add-row-before':
+        chain.addRowBefore().run();
+        return;
+      case 'add-row-after':
+        chain.addRowAfter().run();
+        return;
+      case 'delete-row':
+        chain.deleteRow().run();
+        return;
+      case 'add-column-before':
+        chain.addColumnBefore().run();
+        return;
+      case 'add-column-after':
+        chain.addColumnAfter().run();
+        return;
+      case 'delete-column':
+        chain.deleteColumn().run();
+        return;
+      case 'delete-table':
+        chain.deleteTable().run();
+        return;
+      case 'align-left':
+      case 'align-center':
+      case 'align-right': {
+        const align = action.replace('align-', '');
+        // 对齐作用于当前单元格所在列的首行，保持整列一致。
+        chain.setCellAttribute('align', align).run();
+        syncColumnAlignment(instance, align);
+        return;
+      }
+      default:
+        return;
+    }
+  });
+}
+
+/**
+ * 同步同列表头的对齐属性。
+ *
+ * GLFM 管道表格的对齐写在分隔行，导入时由表头单元格承载，因此设置对齐后
+ * 需要把同列的表头单元格一并更新。
+ */
+function syncColumnAlignment(instance: Editor, align: string) {
+  const { state, view } = instance;
+  const { $from } = state.selection;
+
+  let tableDepth = -1;
+  for (let depth = $from.depth; depth > 0; depth -= 1) {
+    if ($from.node(depth).type.name === 'table') {
+      tableDepth = depth;
+      break;
+    }
+  }
+  if (tableDepth < 0) return;
+
+  const table = $from.node(tableDepth);
+  const tableStart = $from.start(tableDepth) - 1;
+
+  // 计算当前列号。
+  let columnIndex = 0;
+  for (let depth = $from.depth; depth > tableDepth; depth -= 1) {
+    const node = $from.node(depth);
+    if (node.type.name === 'tableRow') {
+      const index = $from.index(depth - 1);
+      columnIndex = Math.min(index, node.childCount - 1);
+      break;
+    }
+  }
+
+  const firstRow = table.child(0);
+  if (firstRow.childCount <= columnIndex) return;
+
+  let headerPos = tableStart + 1;
+  for (let i = 0; i < columnIndex; i += 1) headerPos += firstRow.child(i).nodeSize;
+
+  const header = firstRow.child(columnIndex);
+  if (header.attrs.align === align) return;
+
+  const tr = state.tr.setNodeMarkup(headerPos, undefined, { ...header.attrs, align });
+  view.dispatch(tr);
+}
+
 /** 插入提示块。 */
 function insertAlert(type: AlertType) {
   run((instance) => instance.chain().focus().insertAlert(type).run());
+}
+
+/** 切换当前提示块类型。 */
+function changeAlertType(type: AlertType) {
+  run((instance) => instance.chain().focus().setAlertType(type).run());
 }
 
 /** 插入折叠块。 */
@@ -314,7 +406,9 @@ const showPreview = computed(() => state.value.mode === 'preview');
       @save="save"
       @upload="upload"
       @insert-table="insertTable"
+      @table-action="handleTableAction"
       @insert-alert="insertAlert"
+      @change-alert-type="changeAlertType"
       @insert-details="insertDetails"
       @insert-code="insertCode"
       @insert-math="insertMath"
