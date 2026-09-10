@@ -118,10 +118,15 @@
 | `dist/index.js` | ESM 库入口，Vue 为 peer dependency |
 | `dist/standalone.js` | 静态挂载入口，内联 Vue |
 | `dist/style.css` / `dist/standalone.css` | 样式，与对应入口搭配 |
-| `dist/assets/*` | 按需加载的 Mermaid、KaTeX、高亮代码块 |
+| `dist/katex.css` + `dist/fonts/` | KaTeX 样式与字体，由宿主页面引入 |
+| `dist/assets/*` | 按需加载的 Mermaid、KaTeX 与高亮代码块 |
 | `dist/*.d.ts` | 类型声明 |
 
 静态资源的引用使用相对路径，可部署到 GitLab Pages 的项目子目录。
+
+公式排版依赖 `dist/katex.css`：库模式构建会把 CSS 中引用的字体内联为 base64，
+因此 KaTeX 样式与字体独立发布，由宿主页面通过 `<link rel="stylesheet">` 引入。
+原因与影响见 `docs/lessons.md`。
 
 ## 相关文档
 

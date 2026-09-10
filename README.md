@@ -23,6 +23,8 @@ Vue 3.5 以上为 peer dependency，由宿主提供。
 import { ref } from 'vue';
 import { GlfmEditor, createGitLabMarkdownService } from '@glfm-mark/vue';
 import '@glfm-mark/vue/style.css';
+// 公式排版依赖 KaTeX 样式；字体随站点一起部署，不依赖 CDN。
+import '@glfm-mark/vue/katex.css';
 
 const markdown = ref('# 标题\n\n正文。\n');
 
@@ -65,6 +67,14 @@ editor.destroy();
 ```
 
 `standalone.js` 内联 Vue，并可通过相对路径从子目录加载。
+
+静态挂载时通过普通 `<link>` 引入样式：
+
+```html
+<link rel="stylesheet" href="./glfm-mark/standalone.css" />
+<link rel="stylesheet" href="./glfm-mark/katex.css" />
+<script type="module" src="./glfm-mark/standalone.js"></script>
+```
 
 ## 组件属性与实例方法
 

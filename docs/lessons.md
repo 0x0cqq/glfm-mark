@@ -91,3 +91,18 @@
   服务端行为的新能力都需要真实实例验证。
 - 防复发：`docs/compatibility.md` 与示例页面都写明该限制；真实集成示例单独
   记录接入方式而不声称已验证。
+
+## 库模式构建会把 CSS 引用的字体内联为 base64
+
+- 场景：在库入口的 `style.css` 里 `@import` KaTeX 样式，产物需要随站点部署。
+- 原因：Vite 的库模式构建把 CSS 中 `url()` 引用的字体内联为 data URI；
+  `build.assetsInlineLimit: 0` 对库模式不生效。KaTeX 的 1.03 MB 字体因此变成
+  约 1.37 MB base64，使 `standalone.css` 达 1.47 MB。
+- 影响：不只是体积问题。1.4 MB 的 CSS 在窄屏与移动端仿真下解码缓慢，视觉测试
+  等待编辑器挂载 30 秒超时；报错表现为“元素不可见”，与真实原因相距很远。
+- 做法：发布包不再内联 KaTeX 样式，改为输出 `dist/katex.css` 与 `dist/fonts/`
+  （`tools/copy-assets.mjs`），由宿主页面 `<link>` 引入；字体随站点部署，不依赖 CDN。
+  CSS 降到 12.7 KB，同一套视觉测试从 1.8 分钟降到约 20 秒。
+- 边界：新增任何在 CSS 中引用字体的依赖都适用；纯 CSS（无字体文件）不受影响。
+- 防复发：`npm run build` 固定执行资源复制；`examples/mkdocs/docs/index.md` 写明
+  引入步骤；视觉测试对挂载使用 `state: 'attached'`，避免把加载慢误判成不可见。
