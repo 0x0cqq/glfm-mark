@@ -90,6 +90,8 @@ function resolveUrls(root: ParentNode, context: DocumentContext): void {
   });
 
   root.querySelectorAll('video, audio').forEach((media) => {
+    const src = media.getAttribute('src') ?? media.getAttribute('data-canonical-src') ?? '';
+    if (src) media.setAttribute('src', resolveAssetUrl(src, context));
     media.setAttribute('preload', 'none');
     media.setAttribute('controls', '');
   });

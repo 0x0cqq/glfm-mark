@@ -158,7 +158,8 @@ export const GlfmImage = Image.extend({
     return {
       src: {
         default: null,
-        parseHTML: (element) => element.getAttribute('src'),
+        parseHTML: (element) =>
+          element.getAttribute('data-canonical-src') ?? element.getAttribute('src'),
       },
       alt: {
         default: null,
@@ -168,11 +169,21 @@ export const GlfmImage = Image.extend({
         default: null,
         parseHTML: (element) => element.getAttribute('title'),
       },
-      width: { default: null },
-      height: { default: null },
+      width: {
+        default: null,
+        parseHTML: (element) => element.getAttribute('width'),
+      },
+      height: {
+        default: null,
+        parseHTML: (element) => element.getAttribute('height'),
+      },
       isReference: { default: false },
       /** 展示地址，不参与导出。 */
-      displaySrc: { default: null, rendered: false },
+      displaySrc: {
+        default: null,
+        rendered: false,
+        parseHTML: (element) => element.getAttribute('src'),
+      },
     };
   },
 
@@ -193,9 +204,9 @@ export const GlfmImage = Image.extend({
 });
 
 /**
- * 音频、视频与其他附件：原子行内节点。
+ * 媒体节点：音频、视频与其他附件。
  *
- * 未修改时保留原文，新上传文件使用宿主返回的 Markdown。
+ * `source` 保存原始 Markdown 写法，未修改时直接复用；`kind` 由标签名推导。
  */
 export const GlfmMedia = Node.create({
   name: 'media',
@@ -209,33 +220,57 @@ export const GlfmMedia = Node.create({
     return {
       /** 源码中的原始 Markdown 写法。 */
       source: { default: '' },
-      kind: { default: 'file' },
-      src: { default: null },
-      title: { default: null },
-      alt: { default: null },
+      kind: {
+        default: 'file',
+        parseHTML: (element) => {
+          const tag = element.tagName.toLowerCase();
+          if (tag === 'audio') return 'audio';
+          if (tag === 'video') return 'video';
+          return 'file';
+        },
+      },
+      src: {
+        default: null,
+        parseHTML: (element) => {
+          const target =
+            element.tagName.toLowerCase() === 'source'
+              ? element.parentElement
+              : element;
+          return (
+            element.getAttribute('src') ??
+            element.getAttribute('data-canonical-src') ??
+            target?.getAttribute('src') ??
+            null
+          );
+        },
+      },
+      title: { default: null, parseHTML: (element) => element.getAttribute('title') },
+      alt: { default: null, parseHTML: (element) => element.getAttribute('alt') },
     };
   },
 
   parseHTML() {
     return [
-      { tag: 'audio[src]' },
-      { tag: 'video[src]' },
-      { tag: 'audio source[src]' },
-      { tag: 'video source[src]' },
-      { tag: 'span.media-container audio' },
-      { tag: 'span.media-container video' },
+      { tag: 'audio[src]', priority: 60 },
+      { tag: 'video[src]', priority: 60 },
+      { tag: 'span.media-container audio', priority: 60 },
+      { tag: 'span.media-container video', priority: 60 },
     ];
   },
 
   renderHTML({ node, HTMLAttributes }) {
-    const kind = node.attrs.kind;
-    if (kind === 'audio') {
-      return ['audio', mergeAttributes(HTMLAttributes, { controls: '', preload: 'none' })];
+    const { source, kind, sourceId, ...rest } = HTMLAttributes;
+    void source;
+    void kind;
+    void sourceId;
+
+    if (node.attrs.kind === 'audio') {
+      return ['audio', mergeAttributes(rest, { controls: '', preload: 'none' })];
     }
-    if (kind === 'video') {
-      return ['video', mergeAttributes(HTMLAttributes, { controls: '', preload: 'none' })];
+    if (node.attrs.kind === 'video') {
+      return ['video', mergeAttributes(rest, { controls: '', preload: 'none' })];
     }
-    return ['a', mergeAttributes(HTMLAttributes, { 'data-media-file': '' })];
+    return ['a', mergeAttributes(rest, { 'data-media-file': '' }), node.attrs.alt ?? ''];
   },
 });
 
@@ -255,20 +290,41 @@ export const GlfmReference = Node.create({
 
   addAttributes() {
     return {
-      originalText: { default: '' },
-      referenceType: { default: null },
-      href: { default: null, rendered: false },
-      text: { default: null, rendered: false },
-      className: { default: null, rendered: false },
+      /** GitLab 的 `data-original` 保存用户输入的引用原文。 */
+      originalText: {
+        default: '',
+        parseHTML: (element) => element.getAttribute('data-original') ?? '',
+      },
+      referenceType: {
+        default: null,
+        parseHTML: (element) => element.getAttribute('data-reference-type'),
+      },
+      href: {
+        default: null,
+        rendered: false,
+        parseHTML: (element) => element.getAttribute('href'),
+      },
+      text: {
+        default: null,
+        rendered: false,
+        parseHTML: (element) => element.textContent,
+      },
+      className: {
+        default: null,
+        rendered: false,
+        parseHTML: (element) => element.getAttribute('class'),
+      },
     };
   },
 
   parseHTML() {
-    return [{ tag: 'a.gfm:not([data-link="true"])' }];
+    return [{ tag: 'a.gfm:not([data-link="true"])', priority: 70 }];
   },
 
   renderHTML({ node, HTMLAttributes }) {
-    const { originalText, ...rest } = HTMLAttributes;
+    const { originalText, sourceId, ...rest } = HTMLAttributes;
+    void originalText;
+    void sourceId;
     return [
       'a',
       mergeAttributes(rest, {
@@ -290,14 +346,29 @@ export const GlfmEmoji = Node.create({
 
   addAttributes() {
     return {
-      name: { default: '' },
-      moji: { default: null, rendered: false },
-      title: { default: null, rendered: false },
+      name: {
+        default: '',
+        parseHTML: (element) =>
+          element.getAttribute('data-name') ??
+          element.getAttribute('title') ??
+          element.textContent ??
+          '',
+      },
+      moji: {
+        default: null,
+        rendered: false,
+        parseHTML: (element) => element.textContent,
+      },
+      title: {
+        default: null,
+        rendered: false,
+        parseHTML: (element) => element.getAttribute('title'),
+      },
     };
   },
 
   parseHTML() {
-    return [{ tag: 'gl-emoji' }];
+    return [{ tag: 'gl-emoji', priority: 60 }];
   },
 
   renderHTML({ node, HTMLAttributes }) {
@@ -324,13 +395,26 @@ export const GlfmFootnoteReference = Node.create({
 
   addAttributes() {
     return {
-      label: { default: '' },
-      identifier: { default: null, rendered: false },
+      /** 脚注标识，来自 GitLab 的 `fnref-<label>-<序号>` 结构。 */
+      label: {
+        default: '',
+        parseHTML: (element) => {
+          const anchor = element.querySelector('a');
+          const id = anchor?.getAttribute('id') ?? '';
+          const matched = /^fnref-(.+?)-\d+$/.exec(id);
+          return matched ? matched[1] : (anchor?.textContent ?? '').replace(/[[\]]/g, '');
+        },
+      },
+      identifier: {
+        default: null,
+        rendered: false,
+        parseHTML: (element) => element.querySelector('a')?.getAttribute('href') ?? null,
+      },
     };
   },
 
   parseHTML() {
-    return [{ tag: 'sup.footnote-ref' }];
+    return [{ tag: 'sup.footnote-ref', priority: 60 }];
   },
 
   renderHTML({ node, HTMLAttributes }) {
@@ -379,12 +463,20 @@ export const GlfmHtmlComment = Node.create({
 
   addAttributes() {
     return {
-      description: { default: '' },
+      description: {
+        default: '',
+        parseHTML: (element) => {
+          const hex = /&#x([0-9A-F]{2,4});/gi;
+          return (element.textContent.replace(hex, (_, code: string) =>
+            String.fromCharCode(parseInt(code, 16)),
+          ) || '').trim();
+        },
+      },
     };
   },
 
   parseHTML() {
-    return [{ tag: 'comment' }];
+    return [{ tag: 'comment', priority: 60 }];
   },
 
   renderHTML({ node, HTMLAttributes }) {
