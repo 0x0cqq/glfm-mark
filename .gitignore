@@ -8,4 +8,9 @@ __pycache__/
 test-results/
 playwright-report/
 .vite/
-fixtures/generated/
+
+# 由 npm run examples:prepare 生成的示例资源
+examples/mkdocs/site/
+examples/mkdocs/docs/glfm-mark/
+examples/mkdocs/docs/assets/vendor/
+examples/mkdocs/docs/assets/fixtures.json

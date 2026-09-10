@@ -35,7 +35,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:visual": "playwright test",
-    "fixtures": "vite-node tools/generate-fixtures.ts"
+    "fixtures": "node --experimental-strip-types tools/generate-fixtures.ts",
+    "examples:prepare": "node --experimental-strip-types tools/prepare-examples.ts",
+    "examples:build": "npm run fixtures && npm run build && npm run examples:prepare && .venv/Scripts/python -m mkdocs build --config-file examples/mkdocs/mkdocs.yml"
   },
   "peerDependencies": {
     "vue": "^3.5.0"
