@@ -12,6 +12,7 @@ import { demoMarkdown } from './demo-markdown';
 
 
 const markdown = ref(demoMarkdown);
+const theme = ref<'material' | 'modern'>('material');
 const mode = ref<'wysiwyg' | 'source' | 'preview'>('wysiwyg');
 
 const context = {
@@ -25,6 +26,7 @@ const app = createApp({
     return h(GlfmEditor, {
       modelValue: markdown.value,
       context,
+      theme: theme.value,
       initialMode: mode.value,
       'onUpdate:modelValue': (value: string) => {
         markdown.value = value;
@@ -41,6 +43,7 @@ app.mount('#app');
 // 暴露给 Playwright，便于在测试中读写内容。
 (window as unknown as Record<string, unknown>).__glfmDemo = {
   getMarkdown: () => markdown.value,
+  setTheme: (value: 'material' | 'modern') => { theme.value = value; },
   setMarkdown: (value: string) => {
     markdown.value = value;
   },

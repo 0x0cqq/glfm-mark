@@ -105,6 +105,22 @@ GLFM 提示块与任务列表在 token 层转换，保留行内格式和嵌套�
 - `extensions.ts`：在 schema 之上挂载 Vue 节点视图；schema 本身保持无 DOM 依赖，
   供源码保留层与测试使用。
 
+## 编辑交互
+
+`GlfmToolbar` 提供常驻格式与插入菜单；`SelectionToolbar` 使用真实选区坐标定位，
+只响应文本选区，监听器与动画帧随组件释放。对话框使用原生 dialog 管理模态焦点。
+`EditorGutter` 从唯一导出入口取得块起始偏移，转换为源码行号，再按节点实际位置对齐。
+ResizeObserver 处理图片、折叠和公式高度变化。所有辅助状态均独立于 Markdown。
+
+## 外观主题
+
+`material` 是默认主题，复用宿主 `.md-typeset` 和 `--md-*` 变量，保留原生
+表格、admonition、details/summary 结构。独立页面仅提供低优先级基础样式。
+`modern` 的正文与界面规则按 `data-theme` 隔离。两者使用同一编辑内核、
+选区工具栏、行号、大纲和快捷键；主题变化只更新外观，不重新载入文档。
+当前块通过 ProseMirror Decoration 标记，行号位于编辑 DOM 之外。
+决策见 [ADR 0008](adr/0008-editor-themes.md)。
+
 ## 状态与并发
 
 | 场景 | 处理 |

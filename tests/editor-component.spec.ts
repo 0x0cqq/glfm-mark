@@ -56,6 +56,19 @@ describe('编辑器组件', () => {
     wrapper.unmount();
   });
 
+  it('输入法组合期间延后宿主文档替换，结束后同步源码模式内容', async () => {
+    const wrapper = await mountEditor('# 原文\n');
+    await wrapper.trigger('compositionstart');
+    await wrapper.setProps({ modelValue: '# 宿主新文档\n' });
+    expect(wrapper.find('.ProseMirror h1').text()).toBe('原文');
+    await wrapper.trigger('compositionend');
+    await vi.waitFor(() => expect(wrapper.find('.ProseMirror h1').text()).toBe('宿主新文档'));
+    await wrapper.get('[data-testid="toolbar-mode-source"]').trigger('click');
+    await wrapper.setProps({ modelValue: '# 再次替换\n' });
+    await vi.waitFor(() => expect((wrapper.get('[data-testid="source-editor"]').element as HTMLTextAreaElement).value).toBe('# 再次替换\n'));
+    wrapper.unmount();
+  });
+
   it('未编辑时导出的 Markdown 与输入一致', async () => {
     const markdown = '# 标题\n\n段落内容。\n';
     const wrapper = await mountEditor(markdown);

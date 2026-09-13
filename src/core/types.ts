@@ -5,6 +5,9 @@
 /** 编辑器模式。 */
 export type EditorMode = 'wysiwyg' | 'source' | 'preview';
 
+/** Material 保持宿主排版；modern 提供独立的现代写作外观。 */
+export type EditorTheme = 'material' | 'modern';
+
 /** 文档上下文，由宿主提供绝对目录 URL。 */
 export interface DocumentContext {
   /** 文档标识；改变时清空该文档的历史与解析缓存。 */

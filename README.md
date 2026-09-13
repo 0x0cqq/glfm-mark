@@ -14,6 +14,18 @@
 - 未识别内容保留为可修改源码。GitLab 引用显示原始表达式，不查询项目标题或权限。
 - 完整支持边界见[语法能力](docs/compatibility.md)，实现选择见[ADR 0007](docs/adr/0007-browser-rendering.md)。
 
+## 写作界面
+
+`theme="material"` 为默认外观，正文严格沿用 MkDocs Material 宿主排版与亮暗配色；
+`theme="modern"` 提供更宽松的排版、圆角与写作面板。两套主题共用全部编辑功能。
+独立页面的 Material 外观提供基础排版；完整 Material 样式由宿主站点提供。
+
+选中文字即可格式化；左侧显示源码起始行与 H1/H2 等块标识。
+顶部提供常用格式与插入菜单，可展开文档大纲或开启专注模式。
+右上角键盘按钮列出快捷键，详细交互见[写作说明](docs/compatibility.md#写作交互)。
+
+Vue 组件 `GlfmEditor`、`GlfmPreview` 和静态挂载选项都支持 `theme`。
+
 ## Vue 接入
 
 包名 `@glfm-mark/vue` 不代表已在 npm 注册或发布。从源码构建安装：
@@ -46,7 +58,7 @@ const context = {
 </script>
 
 <template>
-  <GlfmEditor v-model="markdown" :context="context" />
+  <GlfmEditor v-model="markdown" :context="context" theme="material" />
 </template>
 ```
 
@@ -89,6 +101,7 @@ import { mountGlfmEditor } from './glfm-mark/standalone.js';
 const directory = new URL('./', location.href).href;
 const editor = mountGlfmEditor(document.getElementById('editor'), {
   markdown: '# 标题\n\n正文。\n',
+  theme: 'material',
   context: { documentId: 'page-1', linkBaseUrl: directory, assetBaseUrl: directory },
   /** 在页面显示错误。 */
   onError(error) { document.getElementById('status').textContent = error.message; },
@@ -128,6 +141,7 @@ Linux/macOS 使用 `.venv/bin/python`，并将 `examples:build` 展开为 `npm r
 | `modelValue` | 必需 | Markdown 双向绑定 |
 | `context` | 必需 | 文档 ID、链接与附件的绝对目录 URL |
 | `services` | 可省略 | 可选的 `saveMarkdown` 与 `uploadFile` |
+| `theme` | `material` | `material` 或 `modern`，切换时保留选区与编辑历史 |
 | `readonly` | `false` | 只读 |
 | `initialMode` | `wysiwyg` | `wysiwyg`、`source`、`preview` |
 

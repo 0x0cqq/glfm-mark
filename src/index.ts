@@ -29,6 +29,7 @@ export type {
   DocumentContext,
   EditorError,
   EditorMode,
+  EditorTheme,
   EditorServices,
   EditorState,
   GlfmEditorHandle,

@@ -11,6 +11,7 @@ import type {
   DocumentContext,
   EditorError,
   EditorMode,
+  EditorTheme,
   EditorServices,
   GlfmEditorHandle,
   MountedGlfmEditor,
@@ -28,6 +29,8 @@ export interface MountGlfmEditorOptions {
   readonly?: boolean;
   /** 初始模式。 */
   initialMode?: EditorMode;
+  /** 外观主题，默认 Material。 */
+  theme?: EditorTheme;
   /** 内容变化回调。 */
   onChange?: (markdown: string) => void;
   /** 错误回调。 */
@@ -69,6 +72,7 @@ export function mountGlfmEditor(
         context: options.context,
         services: options.services,
         readonly: options.readonly ?? false,
+        theme: options.theme,
         initialMode: options.initialMode ?? 'wysiwyg',
         'onUpdate:modelValue': (value: string) => {
           markdown.value = value;
@@ -131,6 +135,7 @@ export type {
   DocumentContext,
   EditorError,
   EditorMode,
+  EditorTheme,
   EditorServices,
   MountedGlfmEditor,
 };

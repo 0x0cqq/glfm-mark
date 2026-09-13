@@ -38,7 +38,9 @@ export function exportMarkdown(
   doc: ProseMirrorNode,
   baseline: SourceBaseline | null,
   serializer: GlfmSerializer,
+  blockStarts?: number[],
 ): string {
+  if (blockStarts) blockStarts.length = 0;
   const nodes: ProseMirrorNode[] = [];
   doc.forEach((node) => nodes.push(node));
 
@@ -71,6 +73,7 @@ export function exportMarkdown(
 
   // 整份文档与基线完全一致时直接返回原文。
   if (baseline && isUnchanged(rendered, baseline)) {
+    blockStarts?.push(...baseline.blocks.map((block) => block.from));
     return baseline.markdown;
   }
 
@@ -80,20 +83,24 @@ export function exportMarkdown(
     baseline.blocks.length === 0 &&
     rendered.every((block) => block.text.trim() === '')
   ) {
+    blockStarts?.push(0);
     return baseline.markdown;
   }
 
   const parts: string[] = [];
   let previous: RenderedBlock | null = null;
   let previousNodeIndex = -1;
+  let offset = rendered[0]?.reused && rendered[0].baselineIndex === 0 ? (baseline?.gaps[0]?.length ?? 0) : 0;
 
   rendered.forEach((block, nodeIndex) => {
     if (previous) {
-      parts.push(
-        separatorFor(previous, block, baseline, previousNodeIndex, nodeIndex),
-      );
+      const separator = separatorFor(previous, block, baseline, previousNodeIndex, nodeIndex);
+      parts.push(separator);
+      offset += separator.length;
     }
+    blockStarts?.push(offset);
     parts.push(block.text);
+    offset += block.text.length;
     previous = block;
     previousNodeIndex = nodeIndex;
   });

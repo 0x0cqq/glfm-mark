@@ -33,6 +33,17 @@ function createCore(services: Partial<EditorServices> = {}, markdown = '# 标题
 }
 
 describe('模式切换', () => {
+  it('块起始行与当前导出源码一致，重复内容与 CRLF 不串用', async () => {
+    const core = createCore();
+    await core.load('\r\n# 标题\r\n\r\n重复\r\n\r\n重复\r\n');
+    expect(core.getBlockLines()).toEqual([2, 4, 6]);
+    core.editor.chain().setTextSelection(2).splitBlock().run();
+    const lines = core.getMarkdown().split('\n');
+    const blockLines = core.getBlockLines();
+    expect(blockLines.length).toBe(core.editor.state.doc.childCount);
+    expect(lines[blockLines.at(-1)! - 1]).toBe('重复\r');
+    core.destroy();
+  });
   it('切到源码模式立即导出当前内容', async () => {
     const core = createCore();
     await core.load('# 标题\n');

@@ -325,12 +325,13 @@ describe('阶段二：预览展示规则', () => {
     expect(container.querySelector('code')?.textContent).toBe('some text');
   });
 
-  it('表格加上横向滚动容器', async () => {
+  it('预览保留原生表格结构以继承 Material 滚动与相邻块样式', async () => {
     const container = await renderPreviewHtml(
       '<table><tbody><tr><td>a</td></tr></tbody></table>',
       context,
     );
 
-    expect(container.querySelector('.glfm-editor__table-wrapper > table')).not.toBeNull();
+    expect(container.firstElementChild?.tagName).toBe('TABLE');
+    expect(container.querySelector('td')?.textContent).toBe('a');
   });
 });

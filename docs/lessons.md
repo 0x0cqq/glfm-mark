@@ -102,3 +102,12 @@
 - 边界：新增任何在 CSS 中引用字体的依赖都适用；纯 CSS（无字体文件）不受影响。
 - 防复发：`npm run build` 固定执行资源复制；`examples/mkdocs/docs/index.md` 写明
   引入步骤；视觉测试对挂载使用 `state: 'attached'`，避免把加载慢误判成不可见。
+
+## 编辑区域的 DOM 应由 Vue 与 ProseMirror 管理
+
+- 场景：给当前块添加强调样式，或宿主运行全页 KaTeX auto-render。
+- 原因：直接更改 ProseMirror 块的 class 会触发 DOM 监听并干扰选区；KaTeX auto-render 合并相邻文本节点时会删除 Vue 列表的空文本锚点，导致生产包首次更新行号失败。
+- 做法：当前块使用 Decoration，行号在正文 DOM 外渲染；宿主 auto-render 的 ignoredClasses 排除编辑器与预览组件。
+- 边界：适用于会改写编辑器或 Vue 管理区域的 DOM 增强脚本。
+- 防复发：`tests/visual/writing-experience.spec.ts` 验证点击与格式化；`tests/visual/theme-alignment.spec.ts` 在实际宿主中验证初次挂载行号。
+- 依据：浏览器中分别复现选区跳到旧位置、KaTeX 删除空文本节点后 insertBefore 报错；使用装饰并排除宿主扫描后相应用例通过。

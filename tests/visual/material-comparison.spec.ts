@@ -81,7 +81,7 @@ test.describe('Material 视觉对比', () => {
     await expect(editor.locator('table')).toHaveCount(1);
     // 行内公式与块级公式都由 KaTeX 渲染（按需加载，放宽等待时间）。
     await expect(editor.locator('.katex').first()).toBeVisible({ timeout: 15_000 });
-    await expect(editor.locator('details')).toHaveCount(1);
+    await expect(editor.locator('.ProseMirror details')).toHaveCount(1);
     await page.screenshot({
       path: resolve(OUTPUT_DIR, 'editor-light.png'),
       fullPage: true,
@@ -134,7 +134,7 @@ test.describe('Material 视觉对比', () => {
     const overflowing = await editor.evaluate((element) => {
       // 只允许表格、长代码与公式容器按需横向滚动。
       const allowed = [
-        '.glfm-editor__table-wrapper',
+        'table',
         '.glfm-editor__math',
         '.glfm-editor__math-node',
         '.glfm-editor__code-block',
@@ -152,6 +152,9 @@ test.describe('Material 视觉对比', () => {
         .slice(0, 5);
     });
     expect(overflowing).toEqual([]);
+    // Material 原生表格本身是滚动容器，必须局限于编辑器内。
+    await expect(editor.locator('.ProseMirror table')).toHaveCSS('overflow-x', 'auto');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
 
     await page.screenshot({
       path: resolve(OUTPUT_DIR, 'editor-mobile.png'),

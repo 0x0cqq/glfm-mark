@@ -38,7 +38,7 @@ export const GlfmAlertTitle = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['p', mergeAttributes(HTMLAttributes, { class: 'markdown-alert-title' }), 0];
+    return ['p', mergeAttributes(HTMLAttributes, { class: 'markdown-alert-title admonition-title' }), 0];
   },
 });
 
@@ -81,7 +81,7 @@ export const GlfmAlert = Node.create({
     return [
       'div',
       mergeAttributes(rest, {
-        class: `markdown-alert markdown-alert-${node.attrs.type ?? 'note'}`,
+        class: `markdown-alert markdown-alert-${node.attrs.type ?? 'note'} admonition ${node.attrs.type ?? 'note'}`,
       }),
       0,
     ];

@@ -2,7 +2,7 @@
  * 源码模式编辑区：等宽 textarea，Tab 插入两个空格。
  */
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps<{
   modelValue: string;
@@ -13,6 +13,8 @@ const emit = defineEmits<{
   (event: 'update:modelValue', value: string): void;
 }>();
 
+const scrollTop = ref(0);
+const lineCount = computed(() => props.modelValue.split('\n').length);
 const textarea = ref<HTMLTextAreaElement | null>(null);
 
 watch(
@@ -32,7 +34,7 @@ function handleInput(event: Event) {
 
 /** Tab 插入两个空格。 */
 function handleKeydown(event: KeyboardEvent) {
-  if (event.key !== 'Tab') return;
+  if (props.readonly || event.isComposing || event.key !== 'Tab') return;
   event.preventDefault();
 
   const target = event.target as HTMLTextAreaElement;
@@ -47,6 +49,8 @@ function handleKeydown(event: KeyboardEvent) {
 </script>
 
 <template>
+  <div class="glfm-editor__source-layout">
+    <div class="glfm-editor__source-lines" aria-hidden="true"><div :style="{ transform: `translateY(-${scrollTop}px)` }"><span v-for="line in lineCount" :key="line">{{ line }}</span></div></div>
   <textarea
     ref="textarea"
     class="glfm-editor__source-mode"
@@ -54,7 +58,11 @@ function handleKeydown(event: KeyboardEvent) {
     :value="modelValue"
     :readonly="readonly"
     spellcheck="false"
+    wrap="off"
+    aria-label="Markdown 源码"
+    @scroll="scrollTop = ($event.target as HTMLTextAreaElement).scrollTop"
     @input="handleInput"
     @keydown="handleKeydown"
   />
+  </div>
 </template>

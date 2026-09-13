@@ -105,3 +105,16 @@ window.addEventListener('pagehide', () => {
 导航可能移除旧容器，宿主需主动销毁其句柄以释放资源。`mountGlfmEditor` 在同一容器重复
 调用会替换旧实例；`mountAllGlfmEditors` 会跳过已经挂载的容器，两者都不会自动跟踪页面导航。
 离开页面前是否保存未提交内容，由宿主的导航与保存流程决定。
+
+## 主题与页面增强脚本
+
+挂载选项 `theme: 'material'` 为默认值，正文沿用本站 Material CSS；
+选择 `theme: 'modern'` 可使用另一套写作外观。行号、选区格式框、大纲与快捷键两者共用。
+
+公式与图表由编辑器管理。宿主的全页 KaTeX auto-render 应配置：
+
+```js
+ignoredClasses: ['glfm-editor', 'glfm-editor__preview-host']
+```
+
+其他会改写正文 DOM 的增强脚本也应跳过这些容器，保持 Vue 与 ProseMirror 对编辑区域的管理。

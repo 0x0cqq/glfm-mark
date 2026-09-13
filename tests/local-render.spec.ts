@@ -91,4 +91,16 @@ describe('浏览器本地 GLFM', () => {
       expect(fetch).not.toHaveBeenCalled();
     } finally { core.destroy(); fetch.mockRestore(); }
   });
+
+  it('普通项目混合任务与有序任务项编辑后保留标记', async () => {
+    for (const source of ['- 普通\n- [x] **完成**', '3. [ ] 待办\n4. [~] 跳过']) {
+      const env = createEnv();
+      const result = await load(env, source);
+      expect(result.degraded).toBe(false);
+      const state = EditorState.create({ doc: result.doc });
+      const out = env.controller.export(state.apply(state.tr.insertText('新', 3)).doc);
+      expect(out).toContain(source.includes('**') ? '[x] **完成**' : '[~] 跳过');
+      expect(out).toContain(source.includes('**') ? '- 新普通' : '3. [ ] 新待办');
+    }
+  });
 });

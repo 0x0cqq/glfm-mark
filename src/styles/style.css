@@ -9,7 +9,7 @@
  * 需通过 `<link rel="stylesheet" href=".../katex.css">` 引入，不依赖 CDN。
  */
 
-.glfm-editor {
+.glfm-editor, .glfm-editor__preview-host {
   --glfm-border: var(--md-default-fg-color--lightest, #d8d8d8);
   --glfm-bg: var(--md-default-bg-color, #ffffff);
   --glfm-fg: var(--md-default-fg-color, #1f1f1f);
@@ -20,13 +20,17 @@
   --glfm-font: var(--md-text-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif);
   --glfm-mono: var(--md-code-font-family, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
 
+}
+
+.glfm-editor {
   border: 1px solid var(--glfm-border);
   border-radius: var(--glfm-radius);
   background: var(--glfm-bg);
   color: var(--glfm-fg);
   font-family: var(--glfm-font);
-  font-size: 0.8rem;
+  font-size: 14px;
   line-height: 1.6;
+
   display: flex;
   flex-direction: column;
   /* 组件自身不超出宿主容器宽度。 */
@@ -49,16 +53,14 @@
   padding: 0.35rem 0.4rem;
   border-bottom: 1px solid var(--glfm-border);
   background: var(--md-default-bg-color, #fafafa);
-  position: sticky;
-  top: 0;
-  z-index: 2;
+  position: relative;
+  z-index: 3;
 }
 
 .glfm-editor__toolbar,
 .glfm-editor__content,
 .glfm-editor__source-mode,
-.glfm-editor__preview-host,
-.glfm-editor__details-body {
+.glfm-editor__preview-host {
   /* 编辑区不引入自身横向滚动，溢出交给表格、代码与公式容器处理。 */
   min-width: 0;
   max-width: 100%;
@@ -135,8 +137,9 @@
 /* ---------------------------------------------------------------- 编辑区 */
 
 .glfm-editor__content {
-  padding: 0.8rem;
-  min-height: 8rem;
+  position: relative;
+  padding: 24px 24px 48px 68px;
+  min-height: 520px;
 }
 
 .glfm-editor__content .ProseMirror {
@@ -144,90 +147,89 @@
   min-height: 6rem;
 }
 
-.glfm-editor__content .ProseMirror > * + * {
+.glfm-editor[data-theme="modern"] .ProseMirror > * + * {
   margin-top: 0.6em;
 }
 
 .glfm-editor__content .ProseMirror:focus-visible {
-  outline: 2px solid var(--glfm-accent);
-  outline-offset: 2px;
+  outline: none;
 }
 
-.glfm-editor__content blockquote {
+.glfm-editor[data-theme="modern"] .glfm-editor__content blockquote {
   border-left: 4px solid var(--glfm-border);
   margin: 0.6em 0;
   padding-left: 0.8rem;
   color: var(--glfm-muted);
 }
 
-.glfm-editor__content table {
+.glfm-editor[data-theme="modern"] .glfm-editor__content table {
   border-collapse: collapse;
   width: 100%;
   table-layout: auto;
 }
 
-.glfm-editor__content .tableWrapper {
+:where(.glfm-editor__content) .tableWrapper {
   overflow-x: auto;
 }
 
-.glfm-editor__content table[style] {
+.glfm-editor[data-theme="modern"] .glfm-editor__content table[style] {
   /* 编辑器内部可能写入宽度，用样式表覆盖以免表格塌陷。 */
   width: 100% !important;
 }
 
-.glfm-editor__content th,
-.glfm-editor__content td {
+.glfm-editor[data-theme="modern"] .glfm-editor__content th,
+.glfm-editor[data-theme="modern"] .glfm-editor__content td {
   border: 1px solid var(--glfm-border);
   padding: 0.3rem 0.5rem;
   vertical-align: top;
 }
 
-.glfm-editor__content th {
+.glfm-editor[data-theme="modern"] .glfm-editor__content th {
   background: var(--glfm-code-bg);
   font-weight: 600;
 }
 
-.glfm-editor__content ul,
-.glfm-editor__content ol {
+.glfm-editor[data-theme="modern"] .glfm-editor__content ul,
+.glfm-editor[data-theme="modern"] .glfm-editor__content ol {
   padding-left: 1.4rem;
 }
 
-.glfm-editor__content li > p {
+.glfm-editor[data-theme="modern"] .glfm-editor__content li > p {
   margin: 0;
 }
 
-.glfm-editor__content li + li {
+.glfm-editor[data-theme="modern"] .glfm-editor__content li + li {
   margin-top: 0.2rem;
 }
 
-.glfm-editor__content ul[data-type='taskList'] {
+:where(.glfm-editor__content) ul[data-type='taskList'] {
   list-style: none;
   padding-left: 0.2rem;
 }
 
-.glfm-editor__content ul[data-type='taskList'] li {
+:where(.glfm-editor__content) ul[data-type='taskList'] li {
   display: flex;
   gap: 0.4rem;
   align-items: flex-start;
 }
 
-.glfm-editor__content ul[data-type='taskList'] li > label {
+:where(.glfm-editor__content) ul[data-type='taskList'] li > label {
   flex: 0 0 auto;
   margin-top: 0.25rem;
 }
 
-.glfm-editor__content ul[data-type='taskList'] li > div {
+:where(.glfm-editor__content) ul[data-type='taskList'] li > div {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-.glfm-editor__content ul[data-type='taskList'] li > div > p {
+:where(.glfm-editor__content) ul[data-type='taskList'] li > div > p {
   margin: 0;
 }
 
 /* ------------------------------------------------------- 提示块（编辑区） */
 
-.glfm-editor__content .markdown-alert {
+.glfm-editor[data-theme="modern"] .glfm-editor__content .markdown-alert {
   border-left: 4px solid var(--glfm-accent);
   border-radius: var(--glfm-radius);
   padding: 0.5rem 0.7rem;
@@ -235,12 +237,12 @@
   background: color-mix(in srgb, var(--glfm-accent) 6%, transparent);
 }
 
-.glfm-editor__content .markdown-alert-tip { border-left-color: #00bfa5; }
-.glfm-editor__content .markdown-alert-important { border-left-color: #7c4dff; }
-.glfm-editor__content .markdown-alert-warning { border-left-color: #ff9100; }
-.glfm-editor__content .markdown-alert-caution { border-left-color: #ff5252; }
+.glfm-editor[data-theme="modern"] .glfm-editor__content .markdown-alert-tip { border-left-color: #00bfa5; }
+.glfm-editor[data-theme="modern"] .glfm-editor__content .markdown-alert-important { border-left-color: #7c4dff; }
+.glfm-editor[data-theme="modern"] .glfm-editor__content .markdown-alert-warning { border-left-color: #ff9100; }
+.glfm-editor[data-theme="modern"] .glfm-editor__content .markdown-alert-caution { border-left-color: #ff5252; }
 
-.glfm-editor__content .markdown-alert-title {
+.glfm-editor[data-theme="modern"] .glfm-editor__content .markdown-alert-title {
   font-weight: 700;
   margin: 0 0 0.2rem;
 }
@@ -453,50 +455,13 @@
 
 /* ------------------------------------------------------------- 折叠块 */
 
-.glfm-editor__details {
-  border: 1px solid var(--glfm-border);
-  border-radius: var(--glfm-radius);
-  padding: 0.3rem 0.5rem;
-  margin: 0.6em 0;
+/* 编辑状态保留原生 summary，正文容器只承担 ProseMirror 内容挂载。 */
+.glfm-editor[data-theme="modern"] .glfm-editor__details {
+  border: 1px solid var(--glfm-border); border-radius: var(--glfm-radius);
+  padding: 12px 16px; margin: 1em 0;
 }
-
-.glfm-editor__details-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.75rem;
-  color: var(--glfm-muted);
-  margin-bottom: 0.2rem;
-}
-
-.glfm-editor__details-toggle {
-  font: inherit;
-  font-size: 0.75rem;
-  padding: 0.1rem 0.4rem;
-  border: 1px solid var(--glfm-border);
-  border-radius: var(--glfm-radius);
-  background: var(--glfm-bg);
-  cursor: pointer;
-}
-
-/*
- * 覆盖 Tiptap NodeViewContent 施加的内联 `white-space: pre-wrap`，并消除宿主
- * （如 Material）给 `summary` 加的排版内边距：两者叠加会让 details 内容在窄屏横向溢出。
- */
-.glfm-editor__details-body {
-  min-width: 0;
-  white-space: normal !important;
-  overflow-wrap: anywhere;
-}
-
-.glfm-editor__details-body summary {
-  box-sizing: border-box;
-  display: block;
-  max-width: 100%;
-  padding: 0;
-  white-space: normal;
-  cursor: pointer;
-  font-weight: 600;
+.glfm-editor[data-theme="modern"] .glfm-editor__details > summary {
+  font-weight: 600; cursor: pointer;
 }
 
 /* ------------------------------------------------------------- 弹窗 */
@@ -512,17 +477,6 @@
   gap: 0.3rem;
   width: 100%;
   box-sizing: border-box;
-}
-
-.glfm-editor__dialog--modal {
-  position: fixed;
-  inset: 0;
-  margin: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
 }
 
 .glfm-editor__dialog-panel {
@@ -601,41 +555,38 @@
 }
 
 .glfm-editor__preview-host {
+  color: var(--glfm-fg);
   padding: 0.8rem;
 }
 
-.glfm-editor__preview > * + * {
+.glfm-editor__preview-host[data-theme="modern"] .glfm-editor__preview > * + * {
   margin-top: 0.6em;
 }
 
-.glfm-editor__preview blockquote {
+.glfm-editor__preview-host[data-theme="modern"] .glfm-editor__preview blockquote {
   border-left: 4px solid var(--glfm-border);
   margin: 0.6em 0;
   padding-left: 0.8rem;
   color: var(--glfm-muted);
 }
 
-.glfm-editor__table-wrapper {
-  overflow-x: auto;
-}
-
-.glfm-editor__preview table {
+.glfm-editor__preview-host[data-theme="modern"] .glfm-editor__preview table {
   border-collapse: collapse;
   width: 100%;
 }
 
-.glfm-editor__preview th,
-.glfm-editor__preview td {
+.glfm-editor__preview-host[data-theme="modern"] .glfm-editor__preview th,
+.glfm-editor__preview-host[data-theme="modern"] .glfm-editor__preview td {
   border: 1px solid var(--glfm-border);
   padding: 0.3rem 0.5rem;
 }
 
-.glfm-editor__preview th {
+.glfm-editor__preview-host[data-theme="modern"] .glfm-editor__preview th {
   background: var(--glfm-code-bg);
   font-weight: 600;
 }
 
-.glfm-editor__preview .admonition {
+.glfm-editor__preview-host[data-theme="modern"] .glfm-editor__preview .admonition {
   border-left: 4px solid var(--glfm-accent);
   border-radius: var(--glfm-radius);
   padding: 0.5rem 0.7rem;
@@ -643,12 +594,12 @@
   margin: 0.8em 0;
 }
 
-.glfm-editor__preview .admonition.tip { border-left-color: #00bfa5; }
-.glfm-editor__preview .admonition.important { border-left-color: #7c4dff; }
-.glfm-editor__preview .admonition.warning { border-left-color: #ff9100; }
-.glfm-editor__preview .admonition.caution { border-left-color: #ff5252; }
+.glfm-editor__preview-host[data-theme="modern"] .glfm-editor__preview .admonition.tip { border-left-color: #00bfa5; }
+.glfm-editor__preview-host[data-theme="modern"] .glfm-editor__preview .admonition.important { border-left-color: #7c4dff; }
+.glfm-editor__preview-host[data-theme="modern"] .glfm-editor__preview .admonition.warning { border-left-color: #ff9100; }
+.glfm-editor__preview-host[data-theme="modern"] .glfm-editor__preview .admonition.caution { border-left-color: #ff5252; }
 
-.glfm-editor__preview .admonition-title {
+.glfm-editor__preview-host[data-theme="modern"] .glfm-editor__preview .admonition-title {
   font-weight: 700;
   margin: 0 0 0.2rem;
 }
@@ -747,3 +698,152 @@
 .glfm-editor .hljs-function { color: #1565c0; }
 .glfm-editor .hljs-variable,
 .glfm-editor .hljs-name { color: #ad1457; }
+
+/* --------------------------------------------------------- 写作界面 */
+.glfm-editor[data-theme="modern"] { --glfm-radius: 8px; border-radius: 12px; box-shadow: 0 8px 40px #18203808; }
+.glfm-editor__icon { width: 17px; height: 17px; display: block; flex-shrink: 0; }
+.glfm-editor__button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 32px; min-height: 32px; }
+.glfm-editor__button:focus-visible, .glfm-editor__button-primary:focus-visible,
+.glfm-editor__select:focus-visible, .glfm-editor__modes button:focus-visible,
+.glfm-editor__outline button:focus-visible, .glfm-editor__menu-panel button:focus-visible {
+  outline: 2px solid var(--glfm-accent); outline-offset: 2px;
+}
+.glfm-editor__button.is-active { background: color-mix(in srgb, var(--glfm-accent) 12%, transparent); color: var(--glfm-accent); border-color: transparent; }
+.glfm-editor__chrome { position: sticky; top: var(--glfm-sticky-top, 0px); z-index: 5; background: var(--glfm-bg); border-radius: var(--glfm-radius) var(--glfm-radius) 0 0; }
+.glfm-editor__titlebar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--glfm-border); }
+.glfm-editor__title-actions { display: flex; align-items: center; gap: 4px; }
+.glfm-editor__document-label { display: flex; flex-direction: column; line-height: 1.3; font-size: 13px; font-weight: 600; letter-spacing: .03em; }
+.glfm-editor__document-label span { font-size: 10px; color: var(--glfm-muted); font-weight: 400; letter-spacing: .06em; }
+.glfm-editor__modes { display: inline-flex; padding: 3px; background: var(--glfm-code-bg); border: 1px solid color-mix(in srgb, var(--glfm-border) 45%, transparent); border-radius: 9px; }
+.glfm-editor__modes button { border: 0; padding: 5px 16px; background: transparent; color: var(--glfm-muted); cursor: pointer; border-radius: 6px; font: inherit; font-size: 12px; }
+.glfm-editor__modes button.is-active { background: var(--glfm-bg); color: var(--glfm-fg); box-shadow: 0 1px 4px #00000014; }
+.glfm-editor__toolbar { padding: 8px 14px; gap: 8px; background: var(--glfm-bg); }
+.glfm-editor__toolbar-group { gap: 2px; padding-right: 8px; }
+.glfm-editor__toolbar .glfm-editor__select { border: 0; min-height: 32px; font-size: 12px; }
+.glfm-editor__insert-menu { position: relative; margin-left: auto; }
+.glfm-editor__insert-menu > summary { list-style: none; font-size: 12px; }
+.glfm-editor__insert-menu > summary::-webkit-details-marker { display: none; }
+.glfm-editor__insert-menu > summary .glfm-editor__icon:last-child { width: 12px; }
+.glfm-editor__menu-panel { position: absolute; right: 0; top: calc(100% + 8px); width: 240px; max-width: calc(100vw - 32px); max-height: 65vh; overflow-y: auto; padding: 6px; border: 1px solid var(--glfm-border); border-radius: 12px; background: var(--glfm-bg); box-shadow: 0 12px 40px #00000020; z-index: 10; }
+.glfm-editor__menu-panel button { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 0; border-radius: 6px; padding: 9px 12px; color: var(--glfm-fg); font: inherit; font-size: 13px; text-align: left; background: transparent; cursor: pointer; }
+.glfm-editor__menu-panel button:hover:not(:disabled) { background: var(--glfm-code-bg); }
+.glfm-editor__menu-panel button:disabled { opacity: .4; }
+.glfm-editor__menu-panel button span { color: var(--glfm-muted); font-size: 11px; }
+.glfm-editor__menu-label { color: var(--glfm-muted); font-size: 10px; padding: 10px 12px 4px; border-top: 1px solid var(--glfm-border); margin-top: 4px; }
+.glfm-editor__table-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; padding: 6px 14px; border-bottom: 1px solid var(--glfm-border); background: var(--glfm-code-bg); font-size: 12px; }
+.glfm-editor__table-actions > span { color: var(--glfm-muted); margin-right: 8px; }
+.glfm-editor__workspace { display: flex; min-width: 0; align-items: stretch; }
+.glfm-editor__document { flex: 1; min-width: 0; }
+.glfm-editor__preview-host[data-theme="modern"] .glfm-editor__preview,
+.glfm-editor[data-theme="modern"] .glfm-editor__typeset { max-width: 740px; margin: 0 auto; font-size: 16px; line-height: 1.9; }
+.glfm-editor__typeset .ProseMirror { min-height: 400px; overflow-wrap: anywhere; }
+.glfm-editor[data-theme="modern"] .glfm-editor__typeset .ProseMirror > :first-child { margin-top: 0; }
+.glfm-editor__preview-host[data-theme="modern"] .glfm-editor__preview h1,
+.glfm-editor[data-theme="modern"] .glfm-editor__typeset h1 { font-size: 2em; font-weight: 650; line-height: 1.35; letter-spacing: -.025em; margin-bottom: .8em; color: var(--glfm-fg); }
+.glfm-editor__preview-host[data-theme="modern"] .glfm-editor__preview h2,
+.glfm-editor[data-theme="modern"] .glfm-editor__typeset h2 { font-size: 1.45em; font-weight: 600; line-height: 1.5; margin-top: 1.8em; color: var(--glfm-fg); }
+.glfm-editor__preview-host[data-theme="modern"] .glfm-editor__preview h3,
+.glfm-editor[data-theme="modern"] .glfm-editor__typeset h3 { font-size: 1.2em; font-weight: 600; }
+.glfm-editor[data-theme="modern"] .glfm-editor__typeset .ProseMirror p { margin-bottom: 1em; }
+.glfm-editor__typeset .ProseMirror ::selection { background: color-mix(in srgb, var(--glfm-accent) 22%, transparent); }
+.glfm-editor__typeset .ProseMirror > p:only-child:has(> br:only-child)::before { content: '开始写作…'; position: absolute; color: var(--glfm-muted); pointer-events: none; }
+.glfm-editor__gutter { position: absolute; inset: 0; pointer-events: none; }
+.glfm-editor__gutter button { position: absolute; display: flex; align-items: baseline; justify-content: flex-end; gap: 7px; width: 58px; height: 30px; padding: 3px 5px; background: transparent; color: var(--glfm-muted); font: 11px/24px var(--glfm-mono); border: 0; border-radius: 5px; opacity: .58; cursor: pointer; pointer-events: auto; }
+.glfm-editor__gutter button small { font-size: 9px; width: 20px; text-align: left; }
+.glfm-editor__gutter button.is-active, .glfm-editor__gutter button:hover { color: var(--glfm-accent); opacity: 1; }
+.glfm-editor__gutter button.is-active { background: color-mix(in srgb, var(--glfm-accent) 7%, transparent); }
+.glfm-editor__outline { width: 190px; flex-shrink: 0; padding: 24px 12px; border-right: 1px solid var(--glfm-border); background: color-mix(in srgb, var(--glfm-code-bg) 45%, transparent); box-sizing: border-box; }
+.glfm-editor__outline > p { display: flex; justify-content: space-between; margin: 0 8px 16px; color: var(--glfm-muted); font-size: 11px; letter-spacing: .08em; }
+.glfm-editor__outline button { display: flex; align-items: baseline; gap: 8px; border: 0; width: 100%; padding: 8px; background: transparent; border-radius: 6px; color: var(--glfm-muted); font: inherit; font-size: 12px; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+.glfm-editor__outline button small { font: 9px var(--glfm-mono); opacity: .6; flex-shrink: 0; }
+.glfm-editor__outline button.is-active { color: var(--glfm-accent); background: color-mix(in srgb, var(--glfm-accent) 7%, transparent); }
+.glfm-editor__outline button:hover { color: var(--glfm-fg); background: var(--glfm-code-bg); }
+.glfm-editor__footer { display: flex; gap: 16px; padding: 10px 18px; border-top: 1px solid var(--glfm-border); font-size: 11px; color: var(--glfm-muted); }
+.glfm-editor__save-state { display: inline-flex; align-items: center; gap: 7px; margin-right: auto; }
+.glfm-editor__save-state::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #79a991; }
+.glfm-editor__save-state.is-dirty::before { background: #cda366; }
+.glfm-editor__bubble { position: fixed; z-index: 30; display: flex; align-items: center; gap: 3px; border: 1px solid var(--glfm-border); border-radius: 11px; padding: 5px; background: var(--glfm-bg); color: var(--glfm-fg); box-shadow: 0 5px 24px #00000022, 0 1px 3px #0000000d; max-width: calc(100vw - 16px); }
+.glfm-editor__bubble .glfm-editor__button { min-height: 34px; min-width: 34px; }
+.glfm-editor__divider { width: 1px; height: 18px; background: var(--glfm-border); margin: 0 3px; }
+.glfm-editor--focus .glfm-editor__outline { display: none; }
+.glfm-editor--focus .ProseMirror > * { opacity: .3; transition: opacity .15s ease; }
+.glfm-editor--focus .ProseMirror > [data-current-block],
+.glfm-editor--focus .ProseMirror > :hover { opacity: 1; }
+.glfm-editor__source-layout { position: relative; display: flex; height: 540px; min-height: 320px; overflow: hidden; }
+.glfm-editor__source-lines { width: 52px; flex-shrink: 0; padding: 24px 8px 24px 0; box-sizing: border-box; text-align: right; color: var(--glfm-muted); overflow: hidden; background: var(--glfm-code-bg); font: 12px/24px var(--glfm-mono); user-select: none; }
+.glfm-editor__source-lines span { display: block; height: 24px; }
+.glfm-editor__source-layout .glfm-editor__source-mode { flex: 1; min-width: 0; border: 0; border-radius: 0; margin: 0; resize: none; padding: 24px 20px; background: var(--glfm-bg); color: var(--glfm-fg); font: 14px/24px var(--glfm-mono); white-space: pre; overflow: auto; tab-size: 2; }
+.glfm-editor__native-dialog { color: var(--glfm-fg); background: var(--glfm-bg); border: 1px solid var(--glfm-border); border-radius: 16px; padding: 0; width: min(440px, calc(100vw - 32px)); max-height: calc(100vh - 48px); box-shadow: 0 24px 100px #00000040; }
+.glfm-editor__native-dialog::backdrop { background: #10182855; backdrop-filter: blur(3px); }
+.glfm-editor__native-dialog .glfm-editor__dialog-panel { width: auto; min-width: 0; max-width: none; box-shadow: none; border: 0; padding: 24px; }
+.glfm-editor__dialog-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.glfm-editor__dialog-heading h2 { font: 600 18px var(--glfm-font); margin: 0; }
+.glfm-editor__dialog-heading button { font-size: 22px; }
+.glfm-editor__dialog-input { box-sizing: border-box; background: var(--glfm-bg); color: var(--glfm-fg); padding: 10px 12px; border-radius: 8px; font-size: 14px; }
+.glfm-editor__dialog-label { margin-top: 14px; font-size: 12px; color: var(--glfm-muted); }
+.glfm-editor__dialog-actions { margin-top: 24px; }
+.glfm-editor__dialog-actions button { font-size: 13px; padding: 9px 15px; }
+.glfm-editor__muted { color: var(--glfm-muted); font-size: 12px; }
+.glfm-editor__shortcuts { display: grid; grid-template-columns: 1fr auto; gap: 11px; font-size: 12px; }
+.glfm-editor__shortcuts dt, .glfm-editor__shortcuts dd { margin: 0; }
+.glfm-editor__shortcuts kbd { font: 10px var(--glfm-mono); border: 1px solid var(--glfm-border); border-radius: 4px; background: var(--glfm-code-bg); padding: 3px 5px; white-space: nowrap; }
+.glfm-editor__content li[data-task-mark] > p:first-child::before { content: '☐ '; }
+.glfm-editor__content li[data-task-mark='x'] > p:first-child::before { content: '☑ '; }
+.glfm-editor__content li[data-task-mark='~'] > p:first-child::before { content: '⊘ '; }
+@media (max-width: 700px) {
+  .glfm-editor__titlebar { padding: 10px; gap: 6px; flex-wrap: wrap; }
+  .glfm-editor__document-label { display: none; }
+  .glfm-editor__modes button { padding: 5px 12px; }
+  .glfm-editor__toolbar { padding: 6px 8px; gap: 4px; }
+  .glfm-editor__toolbar-group { padding-right: 4px; gap: 0; }
+  .glfm-editor__toolbar .glfm-editor__button { min-width: 30px; padding: 5px; }
+  .glfm-editor__workspace { flex-direction: column; }
+  .glfm-editor__outline { width: 100%; max-height: 200px; overflow: auto; border-right: 0; border-bottom: 1px solid var(--glfm-border); padding: 14px; }
+  .glfm-editor__content { padding: 28px 16px 44px 60px; }
+  .glfm-editor__preview-host[data-theme="modern"] .glfm-editor__preview,
+.glfm-editor[data-theme="modern"] .glfm-editor__typeset { font-size: 15px; }
+  .glfm-editor__gutter button { width: 52px; gap: 4px; font-size: 10px; }
+  .glfm-editor__footer { padding: 9px 12px; gap: 10px; flex-wrap: wrap; }
+  .glfm-editor__native-dialog .glfm-editor__dialog-panel { padding: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .glfm-editor--focus .ProseMirror > * { transition: none; } }
+
+/* Material 主题继承 .md-typeset 的真实排版；以下仅提供组件交互所需的布局。 */
+.glfm-editor[data-theme="material"] .glfm-editor__typeset { margin: 0; }
+.glfm-editor[data-theme="material"] .glfm-editor__modes,
+.glfm-editor[data-theme="material"] .glfm-editor__modes button,
+.glfm-editor[data-theme="material"] .glfm-editor__bubble,
+.glfm-editor[data-theme="material"] .glfm-editor__menu-panel { border-radius: 4px; }
+.glfm-editor[data-theme="material"] .glfm-editor__titlebar { padding: 8px 12px; }
+.glfm-editor[data-theme="material"] .glfm-editor__typeset .admonition > .admonition-title:empty::after { content: 'Note'; }
+.glfm-editor[data-theme="modern"] .glfm-editor__content { padding: 40px 40px 64px 76px; }
+.glfm-editor__preview-host[data-theme="modern"] .glfm-editor__preview h2,
+.glfm-editor[data-theme="modern"] .glfm-editor__typeset h2 { margin-top: 1.8em; }
+.glfm-editor__typeset details.glfm-editor__details > summary { cursor: pointer; }
+.glfm-editor__typeset details.glfm-editor__details > [data-details-content] { display: contents; }
+@media (max-width: 700px) {
+  .glfm-editor[data-theme="modern"] .glfm-editor__content { padding: 28px 16px 44px 60px; }
+  .glfm-editor[data-theme="material"] .glfm-editor__content { padding: 20px 12px 36px 60px; }
+}
+
+/* 独立使用时的低优先级基础排版，宿主 .md-typeset 可直接覆盖。 */
+@layer glfm-base {
+:where(.glfm-editor__typeset, .glfm-editor__preview) { font-size: 16px; line-height: 1.6; }
+:where(.glfm-editor__typeset, .glfm-editor__preview) :where(table) { border-collapse: collapse; max-width: 100%; display: inline-block; overflow: auto; }
+:where(.glfm-editor__typeset, .glfm-editor__preview) :where(th, td) { padding: .6em 1em; }
+:where(.glfm-editor__typeset, .glfm-editor__preview) :where(.admonition, details) { border: 1px solid var(--glfm-border); border-radius: 4px; padding: 0 12px; margin: 1.5em 0; }
+:where(.glfm-editor__typeset, .glfm-editor__preview) :where(.admonition-title, summary) { font-weight: 700; }
+}
+/* 工具菜单是界面控件，避免被宿主正文的 details/summary 规则装饰。 */
+.glfm-editor .glfm-editor__insert-menu { border: 0; padding: 0; margin: 0 0 0 auto; box-shadow: none; background: transparent; font: inherit; overflow: visible; }
+.glfm-editor .glfm-editor__insert-menu > summary { margin: 0; padding: 4px 8px; border: 0; border-radius: 4px; background: transparent; color: inherit; font-weight: 400; }
+.glfm-editor .glfm-editor__insert-menu > summary::before,
+.glfm-editor .glfm-editor__insert-menu > summary::after { display: none; }
+
+.glfm-editor__typeset .glfm-editor__details > summary { position: relative; }
+.glfm-editor[data-theme="modern"] .glfm-editor__details > summary { padding-right: 36px; }
+.glfm-editor__typeset .glfm-editor__details > summary::after { display: none; }
+.glfm-editor__details-disclosure { position: absolute; inset: 0 0 auto auto; width: 32px; height: 100%; border: 0; background: transparent; color: inherit; cursor: pointer; font: 18px/1 sans-serif; }
+.glfm-editor__details-disclosure[aria-expanded='true'] { transform: rotate(180deg); }
+.glfm-editor__details-disclosure:focus-visible { outline: 2px solid var(--glfm-accent); outline-offset: -3px; }
+.glfm-editor[data-theme="modern"] .ProseMirror li p { margin: 0; }

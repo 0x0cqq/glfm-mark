@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof renderMathInElement !== 'function') return;
 
   renderMathInElement(document.body, {
+    ignoredClasses: ['glfm-editor', 'glfm-editor__preview-host'],
     delimiters: [
       { left: '$$', right: '$$', display: true },
       { left: '$', right: '$', display: false },

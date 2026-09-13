@@ -11,6 +11,7 @@ import type { Node as ProseMirrorNode, Schema } from '@tiptap/pm/model';
 import { glfmExtensions } from '../glfm/schema';
 import { createGlfmSerializer, type GlfmSerializer } from '../glfm/serialize';
 import { DocumentController } from '../source/document-controller';
+import { exportMarkdown } from '../source/export';
 import type {
   DocumentContext,
   EditorError,
@@ -134,6 +135,18 @@ export class GlfmEditorCore {
   getMarkdown(): string {
     if (this.state.mode !== 'wysiwyg') return this.sourceMarkdown ?? this.currentMarkdown();
     return this.currentMarkdown();
+  }
+
+  /** 返回当前导出源码中每个顶层块的起始行，与唯一导出入口共用区间计算。 */
+  getBlockLines(): number[] {
+    const starts: number[] = [];
+    const markdown = exportMarkdown(this.editor.state.doc, this.controller.currentBaseline, this.serializer, starts);
+    let cursor = 0;
+    let line = 1;
+    return starts.map((offset) => {
+      while (cursor < offset) { if (markdown[cursor] === '\n') line++; cursor++; }
+      return line;
+    });
   }
 
   /** 源码模式下的临时文本。 */

@@ -15,7 +15,7 @@
 - 对外数据模型：Markdown 字符串。
 - 编辑内核：Vue 3、TypeScript、Tiptap 3、ProseMirror。
 - 语法能力：定向移植 GitLab Content Editor 的 GLFM 编辑与转换规则。
-- 展示目标：MkDocs Material。
+- 展示目标：默认 `material` 主题严格沿用 MkDocs Material 宿主排版；`modern` 提供另一套写作外观。行号、选区工具栏与快捷键等编辑能力由两套主题共用。
 - 部署方式：静态 JS、CSS 和配套资源。
 - GLFM 解析与渲染：浏览器 TypeScript 本地完成，不依赖 GitLab API；上传和保存由宿主按需提供。
 

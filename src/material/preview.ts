@@ -64,10 +64,7 @@ function convertAlerts(root: ParentNode): void {
     heading.textContent = title;
     admonition.append(heading);
 
-    const body = document.createElement('div');
-    body.className = 'glfm-editor__admonition-body';
-    while (alert.firstChild) body.append(alert.firstChild);
-    admonition.append(body);
+    while (alert.firstChild) admonition.append(alert.firstChild);
 
     alert.replaceWith(admonition);
   });
@@ -196,17 +193,6 @@ async function enhanceMermaid(root: ParentNode): Promise<void> {
   );
 }
 
-/** 给表格加上横向滚动容器。 */
-function enhanceTables(root: ParentNode): void {
-  root.querySelectorAll('table').forEach((table) => {
-    if (table.parentElement?.classList.contains('glfm-editor__table-wrapper')) return;
-    const wrapper = document.createElement('div');
-    wrapper.className = 'glfm-editor__table-wrapper';
-    table.replaceWith(wrapper);
-    wrapper.append(table);
-  });
-}
-
 /**
  * 把 GitLab HTML 渲染为 Material 风格的预览 DOM。
  *
@@ -222,7 +208,6 @@ export async function renderPreviewHtml(
 
   convertAlerts(container);
   resolveUrls(container, context);
-  enhanceTables(container);
   enhanceCodeBlocks(container);
   await enhanceMath(container);
   await enhanceMermaid(container);

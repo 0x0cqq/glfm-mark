@@ -5,7 +5,7 @@
  */
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue';
-import type { DocumentContext } from '../core/types';
+import type { DocumentContext, EditorTheme } from '../core/types';
 import { renderMarkdown } from '../glfm/render';
 import { renderPreviewHtml } from '../material/preview';
 
@@ -15,8 +15,9 @@ const props = withDefaults(
     context: DocumentContext;
     /** 输入变化后的刷新延迟，单位毫秒。 */
     delay?: number;
+    theme?: EditorTheme;
   }>(),
-  { delay: 350 },
+  { delay: 350, theme: 'material' as EditorTheme },
 );
 
 const container = ref<HTMLElement | null>(null);
@@ -76,7 +77,7 @@ defineExpose({ refresh });
 </script>
 
 <template>
-  <div class="glfm-editor__preview-host">
+  <div class="glfm-editor__preview-host" :data-theme="theme">
     <p v-if="error" class="glfm-editor__preview-error" data-testid="preview-error">
       预览失败：{{ error }}
       <span v-if="stale">（下方内容已过期）</span>
