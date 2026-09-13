@@ -7,8 +7,6 @@ import './styles/style.css';
 
 export { default as GlfmEditor } from './components/GlfmEditor.vue';
 export { default as GlfmPreview } from './components/GlfmPreview.vue';
-export { createGitLabMarkdownService } from './adapters/gitlab';
-export type { GitLabMarkdownService, GitLabMarkdownServiceOptions } from './adapters/gitlab';
 export { GlfmEditorCore } from './core/editor';
 export type { EditorOptions, EditorCallbacks, ExtensionsFactory } from './core/editor';
 export { editorExtensions } from './core/extensions';
@@ -35,10 +33,11 @@ export type {
   EditorState,
   GlfmEditorHandle,
   MountedGlfmEditor,
-  RenderRequest,
   SaveRequest,
   UploadRequest,
   UploadResult,
 } from './core/types';
 
 export type { SourceBaseline, SourceBlock, ImportResult } from './source/types';
+
+export { renderMarkdown } from './glfm/render';

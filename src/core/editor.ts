@@ -4,6 +4,7 @@
  * 对外只暴露 Markdown 字符串；ProseMirror 文档是内部编辑状态。
  * Vue 组件与静态挂载入口共用这一层，避免两套状态逻辑。
  */
+import { renderMarkdown } from '../glfm/render';
 import { getSchema } from '@tiptap/core';
 import { Editor } from '@tiptap/vue-3';
 import type { Node as ProseMirrorNode, Schema } from '@tiptap/pm/model';
@@ -35,7 +36,7 @@ export interface EditorCallbacks {
 export interface EditorOptions {
   markdown: string;
   context: DocumentContext;
-  services: EditorServices;
+  services?: EditorServices;
   readonly?: boolean;
   initialMode?: EditorMode;
   callbacks: EditorCallbacks;
@@ -104,23 +105,18 @@ export class GlfmEditorCore {
   }
 
   /** 载入文档并建立基线。 */
-  async load(markdown: string): Promise<void> {
+  async load(markdown: string, resetSaved = true): Promise<void> {
     this.setState({ importing: true });
 
     try {
-      const result = await this.controller.load(markdown, (value, signal) =>
-        this.options.services.renderMarkdown({
-          markdown: value,
-          context: this.options.context,
-          signal,
-        }),
-      );
+      const result = await this.controller.load(markdown, renderMarkdown);
 
       this.lastEmitted = markdown;
-      this.savedMarkdown = markdown;
+      if (resetSaved) this.savedMarkdown = markdown;
+      this.sourceMarkdown = this.mode === 'wysiwyg' ? null : markdown;
 
       this.editor.commands.setContent(result.doc.toJSON(), { emitUpdate: false });
-      this.setState({ dirty: false, importing: false });
+      this.setState({ dirty: markdown !== this.savedMarkdown, importing: false });
     } catch (error) {
       if (isAbortError(error)) return;
 
@@ -136,7 +132,7 @@ export class GlfmEditorCore {
 
   /** 返回当前最新 Markdown，包含尚未发出的输入法内容。 */
   getMarkdown(): string {
-    if (this.state.mode === 'source') return this.sourceMarkdown ?? this.currentMarkdown();
+    if (this.state.mode !== 'wysiwyg') return this.sourceMarkdown ?? this.currentMarkdown();
     return this.currentMarkdown();
   }
 
@@ -183,7 +179,7 @@ export class GlfmEditorCore {
       return true;
     }
 
-    if (mode === 'wysiwyg' && this.state.mode === 'source') {
+    if (mode === 'wysiwyg' && this.sourceMarkdown !== null) {
       const source = this.sourceMarkdown ?? '';
       const current = this.currentMarkdown();
 
@@ -197,7 +193,7 @@ export class GlfmEditorCore {
       // 源码发生变化：重新导入并建立新基线。
       this.setState({ importing: true });
       try {
-        await this.load(source);
+        await this.load(source, false);
         this.sourceMarkdown = null;
         this.setState({ mode });
         return true;
@@ -237,7 +233,7 @@ export class GlfmEditorCore {
    * 以发起请求时的快照为准；保存期间允许继续编辑，成功后仍保持正确的 dirty 状态。
    */
   async save(): Promise<boolean> {
-    const saveMarkdown = this.options.services.saveMarkdown;
+    const saveMarkdown = this.options.services?.saveMarkdown;
     if (!saveMarkdown || this.state.saving) return false;
 
     const snapshot = this.getMarkdown();
@@ -267,12 +263,12 @@ export class GlfmEditorCore {
 
   /** 是否可用保存功能。 */
   get canSave(): boolean {
-    return Boolean(this.options.services.saveMarkdown);
+    return Boolean(this.options.services?.saveMarkdown);
   }
 
   /** 是否可用上传功能。 */
   get canUpload(): boolean {
-    return Boolean(this.options.services.uploadFile);
+    return Boolean(this.options.services?.uploadFile);
   }
 
   /**
@@ -281,7 +277,7 @@ export class GlfmEditorCore {
    * 无法结构化解析时插入源码保留块，不丢弃结果。
    */
   async uploadFile(file: File): Promise<boolean> {
-    const upload = this.options.services.uploadFile;
+    const upload = this.options.services?.uploadFile;
     if (!upload) return false;
 
     this.setState({ uploading: this.state.uploading + 1 });
@@ -355,11 +351,7 @@ export class GlfmEditorCore {
     this.previewAbort = new AbortController();
 
     try {
-      const { html } = await this.options.services.renderMarkdown({
-        markdown: this.getMarkdown(),
-        context: this.options.context,
-        signal: this.previewAbort.signal,
-      });
+      const { html } = await renderMarkdown(this.getMarkdown(), this.previewAbort.signal);
 
       if (seq !== this.previewSeq) return null;
       return html;

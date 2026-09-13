@@ -20,12 +20,11 @@
 | `src/source/` | 源码保留：sourcepos 映射、基线、块身份、局部导出、语义快照 |
 | `src/material/` | Material 展示：HTML 净化、提示块转换、KaTeX、Mermaid、代码高亮 |
 | `src/components/` | Vue 界面：工具栏、源码编辑区、预览、弹窗与节点视图 |
-| `src/adapters/` | 宿主适配：默认 GitLab Markdown API 服务 |
 | `src/standalone.ts` | 静态挂载入口 `mountGlfmEditor` |
 | `demo/` | 开发演示页 |
 | `examples/mkdocs/` | MkDocs Material 参考页与两类接入示例 |
 | `tests/` | 单元、集成、安全、性能与视觉测试 |
-| `tools/` | fixture 与示例资源生成脚本 |
+| `tools/` | 示例资源生成脚本 |
 
 ## 数据流
 
@@ -34,10 +33,10 @@
     │
     ├── 保存原始源码与换行信息（buildLineIndex / detectDefaultEol）
     │
-    └── 调用宿主 renderMarkdown
+    └── 浏览器本地 renderMarkdown（markdown-it token + GLFM 规则）
              │
              ▼
-       净化 GitLab HTML（sanitizeGitLabHtml）
+       净化 本地 GLFM HTML（sanitizeGitLabHtml）
              │
              ▼
        读取 data-sourcepos → UTF-8 字节列换算为 UTF-16 偏移
@@ -59,15 +58,12 @@
 
 ## 模块边界
 
-### 宿主渲染契约
+### 本地解析契约
 
-编辑器调用注入的 `EditorServices.renderMarkdown`，核心不直接绑定 GitLab 网络接口。
-默认适配器在 `src/adapters/gitlab.ts` 中实现；替代渲染器需要返回兼容的 HTML 结构与
-可靠的 `data-sourcepos`，详见 [README 的渲染说明](../README.md#渲染依赖与离线能力)。
-当前包没有发布完整的本地 GLFM 渲染器，standalone 也需要宿主提供该服务。
-
-`tests/fixtures/renderer.ts` 在测试和开发演示中即时生成近似 HTML；MkDocs 离线示例则
-使用预生成的固定文档映射。它们不证明真实 GitLab API 会返回所需的源码位置。
+`src/glfm/render.ts` 基于 markdown-it token 的行区间生成 UTF-8 sourcepos，
+GLFM 提示块与任务列表在 token 层转换，保留行内格式和嵌套结构。
+导入和预览共享本地入口，演示与测试调用同一解析器。
+未知 HTML 输出转义源码卡片；位置缺失时仍保留原有降级保护。
 
 ### 源码保留（`src/source/`）
 
@@ -91,14 +87,14 @@
 
 - `schema.ts`：逐个注册扩展，不使用 StarterKit，避免默认链接、列表、历史等
   能力与 GLFM 扩展重复。
-- `extensions/`：节点与标记定义，同时承担 GitLab HTML 的解析规则。
+- `extensions/`：节点与标记定义，同时承担 本地 GLFM HTML 的解析规则。
 - `serialize.ts`：**唯一的 Markdown 序列化入口**。块级结构直接拼装，行内内容
   交给 `prosemirror-markdown` 的 `renderInline`，从而复用其标记、转义与空白处理，
   同时完全控制块之间的空白。
 
 ### Material 展示（`src/material/`）
 
-- `sanitize.ts`：服务端 HTML、粘贴 HTML 与动态 SVG 分别净化。
+- `sanitize.ts`：本地生成的 HTML、粘贴 HTML 与动态 SVG 分别净化。
 - `preview.ts`：预览流程。净化 → 提示块转 Material admonition → 解析展示地址 →
   代码高亮、KaTeX、Mermaid。
 - `math.ts` / `mermaid.ts` / `highlight.ts`：按需加载，渲染失败时保留原文与错误。
@@ -126,7 +122,7 @@
 | 产物 | 说明 |
 |---|---|
 | `dist/index.js` | ESM 库入口，Vue 为 peer dependency |
-| `dist/standalone.js` | 静态挂载入口，内联 Vue，导出挂载函数与 GitLab 适配器 |
+| `dist/standalone.js` | 静态挂载入口，内联 Vue 与本地解析器 |
 | `dist/style.css` / `dist/standalone.css` | 样式，与对应入口搭配 |
 | `dist/katex.css` + `dist/fonts/` | KaTeX 样式与字体，由宿主页面引入 |
 | `dist/assets/*` | 按需加载的 Mermaid、KaTeX 与高亮代码块 |

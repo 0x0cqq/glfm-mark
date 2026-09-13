@@ -1,8 +1,8 @@
 /**
- * 预览渲染：把 GitLab 渲染的 HTML 转换为 Material 风格展示。
+ * 预览渲染：把 本地生成的 GLFM HTML 转换为 Material 风格展示。
  *
  * 流程（设计文档 §5）：
- * 1. 净化服务端 HTML。
+ * 1. 净化生成的 HTML。
  * 2. 转换提示块为 Material admonition 结构。
  * 3. 处理数学、Mermaid 与代码高亮。
  * 4. 解析相对地址为绝对展示地址。

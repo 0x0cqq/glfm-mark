@@ -9,6 +9,8 @@
 import { copyFileSync, cpSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { writeFileSync } from 'node:fs';
+import { demoMarkdown } from '../demo/demo-markdown.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
@@ -31,6 +33,8 @@ function copy(from: string, to: string): void {
 function main(): void {
   const docs = resolve(root, 'examples/mkdocs/docs');
   const target = resolve(docs, 'glfm-mark');
+  ensure(resolve(docs, 'assets'));
+  writeFileSync(resolve(docs, 'assets/demo-markdown.js'), `export const demoMarkdown = ${JSON.stringify(demoMarkdown)};\n`);
 
   copy(resolve(root, 'dist/standalone.js'), resolve(target, 'standalone.js'));
   copy(resolve(root, 'dist/standalone.css'), resolve(target, 'standalone.css'));

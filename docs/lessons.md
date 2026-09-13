@@ -79,22 +79,14 @@
 - 防复发：视觉测试在 Material 站点中检查表格宽度；`semanticSnapshot` 的
   属性白名单保证内部属性不参与导出比较。
 
-## fixture 渲染器与生产渲染器的职责不同
+## 本地渲染要验证编辑后的语义
 
-- 场景：离线环境需要渲染 GLFM，但 GitLab 公共 Markdown API 需要认证。
-- 原因：把 fixture 当作完整 GLFM 引擎会掩盖真实集成问题；完全依赖真实服务
-  又无法离线开发与测试。
-- 做法：`tests/fixtures/renderer.ts` 用 markdown-it 生成**近似** GitLab 的 HTML，
-  按 GitLab 规则附加 `data-sourcepos`，并覆写围栏、HTML 块、提示块、任务列表与
-  公式的输出形状。文档与界面明确说明它只覆盖演示文档。
-- 边界：fixture 只验证接口契约，不证明真实 GitLab 集成成功；任何依赖 GLFM
-  服务端行为的新能力都需要真实实例验证。
-- 防复发：`docs/compatibility.md` 与示例页面都写明该限制；真实集成示例单独
-  记录接入方式而不声称已验证。
-- 依据补充：[GitLab Markdown API 文档](https://docs.gitlab.com/api/markdown/)未承诺
-  返回 `data-sourcepos`；接入目标实例时应实际检查源码位置与 HTML 结构，不能把
-  fixture 主动添加的属性视为公共 API 的保证。当前接口替代条件见
-  [README](../README.md#渲染依赖与离线能力)。
+- 场景：从 Markdown 导入任务列表、提示块、折叠块和数学。
+- 原因：把容器替换成 textContent 会丢失行内格式和嵌套结构；原样导出复用基线，发现不了这种损失。
+- 做法：在 token 层转换结构，测试中执行真实编辑，再导出并重解析；任务项启用嵌套内容。
+- 边界：适用于生产本地解析器，未知内容继续按块保留源码。
+- 防复发：`tests/local-render.spec.ts` 与 `tests/source-preservation.spec.ts` 共用生产解析入口。
+- 依据：嵌套任务列表测试复现整块降级；启用 nested 后正常导入，格式与子列表保留。
 
 ## 库模式构建会把 CSS 引用的字体内联为 base64
 

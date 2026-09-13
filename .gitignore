@@ -13,4 +13,4 @@ playwright-report/
 examples/mkdocs/site/
 examples/mkdocs/docs/glfm-mark/
 examples/mkdocs/docs/assets/vendor/
-examples/mkdocs/docs/assets/fixtures.json
+examples/mkdocs/docs/assets/demo-markdown.js

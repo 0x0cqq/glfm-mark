@@ -23,7 +23,7 @@ export interface MountGlfmEditorOptions {
   /** 文档上下文。 */
   context: DocumentContext;
   /** 宿主服务。 */
-  services: EditorServices;
+  services?: EditorServices;
   /** 是否只读。 */
   readonly?: boolean;
   /** 初始模式。 */
@@ -127,8 +127,6 @@ export function unmountGlfmEditor(element: HTMLElement): void {
 }
 
 export { GlfmEditor };
-export { createGitLabMarkdownService } from './adapters/gitlab';
-export type { GitLabMarkdownService, GitLabMarkdownServiceOptions } from './adapters/gitlab';
 export type {
   DocumentContext,
   EditorError,
@@ -136,3 +134,5 @@ export type {
   EditorServices,
   MountedGlfmEditor,
 };
+
+export { renderMarkdown } from './glfm/render';

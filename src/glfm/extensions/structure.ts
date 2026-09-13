@@ -265,7 +265,8 @@ export const GlfmTaskItem = TaskItem.extend({
 
   parseHTML() {
     // GitLab 输出 `li.task-list-item`，并在其中放置 checkbox。
-    return [{ tag: 'li.task-list-item', priority: 60 }];
+    return [{ tag: 'li.task-list-item', priority: 60, getAttrs: (element) =>
+      element.parentElement?.matches('ul.task-list, ul.contains-task-list, ol.contains-task-list') ? {} : false }];
   },
 
   renderHTML({ node, HTMLAttributes }) {

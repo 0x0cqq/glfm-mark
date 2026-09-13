@@ -96,7 +96,7 @@ export function glfmExtensions(): Extensions {
     GlfmListItem,
     GlfmListKeymap,
     GlfmTaskList,
-    GlfmTaskItem,
+    GlfmTaskItem.configure({ nested: true }),
     GlfmCodeBlock,
     GlfmHorizontalRule,
     GlfmHardBreak,

@@ -1,8 +1,7 @@
 # 实际接入示例
 
-本页说明在已有 MkDocs Material 站点中部署 standalone。构建产物、普通 HTML 示例与
-认证前提见仓库根目录 `README.md` 的「Standalone 静态部署」。本页代码需要接入宿主
-实际的渲染、认证与保存服务；尚未完成真实 GitLab 实例验证。
+本页说明在已有 MkDocs Material 站点中部署 standalone。解析与预览在浏览器内完成，
+无需认证或渲染服务；保存、上传和文档载入按宿主需要接入。
 
 ## 文件与配置
 
@@ -42,14 +41,8 @@ Wiki 页面位置提供。
 
 | 服务 | 用途 | 是否必需 |
 |---|---|---|
-| `renderMarkdown({ markdown, context, signal })` | 返回 `{ html }`；富文本导入需要兼容 GitLab 的 HTML 与可靠 `data-sourcepos` | 必需 |
 | `uploadFile({ file, context, signal })` | 上传附件，返回 `{ markdown }` 供插入 | 可选 |
 | `saveMarkdown({ markdown, context, signal })` | 保存请求发起时的 Markdown 快照，成功时 resolve | 可选 |
-
-使用 GitLab 时，可在该模块中从 `../glfm-mark/standalone.js` 导入
-`createGitLabMarkdownService`，提供 `baseUrl`、`project` 和请求时执行的 `getHeaders`，
-将其 `renderMarkdown` 放入 `services`。认证由宿主会话提供，不写入静态文件。
-浏览器直连跨域服务需要服务端允许跨域请求；也可通过宿主已有的受认证代理接入。
 
 上传与保存实现应传递 `signal`，检查 HTTP 状态和返回字段，失败时抛出错误。组件据此
 保留当前内容并显示失败；`fetch` 收到 HTTP 4xx/5xx 本身不会抛出异常。

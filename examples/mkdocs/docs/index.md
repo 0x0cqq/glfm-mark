@@ -4,8 +4,8 @@
 
 - **Material 参考页**：用 MkDocs Material 原生语法渲染与编辑器演示文档等价的内容，
   用于视觉对比。
-- **编辑器离线示例**：在站点中挂载编辑器，渲染服务由预生成 fixture 提供。
-- **实际接入示例**：说明宿主如何注入 render、upload、save 与文档基准 URL。
+- **编辑器离线示例**：在站点中挂载编辑器，使用浏览器 TypeScript 本地渲染任意文档。
+- **实际接入示例**：说明宿主如何注入 upload、save 与文档基准 URL。
 
 ## 构建与预览
 
@@ -15,16 +15,13 @@
 # 首次安装 Node 依赖；Python 虚拟环境安装见仓库 README
 npm ci
 
-# 1. 生成离线示例 fixture
-npm run fixtures
-
-# 2. 构建发布产物（含独立的 KaTeX 样式与字体）
+# 1. 构建发布产物（含独立的 KaTeX 样式与字体）
 npm run build
 
-# 3. 复制编辑器与参考页所需的 JS、CSS 和字体
+# 2. 复制编辑器与参考页所需的 JS、CSS 和字体
 npm run examples:prepare
 
-# 4. 构建并启动 MkDocs（Windows；Linux/macOS 使用 .venv/bin/python）
+# 3. 构建并启动 MkDocs（Windows；Linux/macOS 使用 .venv/bin/python）
 .venv/Scripts/python -m mkdocs build --config-file examples/mkdocs/mkdocs.yml
 .venv/Scripts/python -m mkdocs serve --config-file examples/mkdocs/mkdocs.yml
 ```

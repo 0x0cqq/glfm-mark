@@ -21,6 +21,8 @@ async function loadMermaid(theme: 'default' | 'dark') {
       securityLevel: 'strict',
       theme,
       fontFamily: 'inherit',
+      htmlLabels: false,
+      flowchart: { htmlLabels: false },
     });
     currentTheme = theme;
   }

@@ -1,5 +1,5 @@
 /**
- * HTML 净化：服务端返回的 HTML、粘贴 HTML 与动态 SVG 都经过适合其内容类型的净化。
+ * HTML 净化：本地生成的 HTML、粘贴 HTML 与动态 SVG 都经过适合其内容类型的净化。
  *
  * 规则（设计文档 §7）：
  * - 移除脚本、事件属性、iframe、表单和内联样式。
@@ -33,6 +33,11 @@ const ALLOWED_ATTRS = [
   'lang',
   // GitLab 语义属性
   'data-sourcepos',
+  'data-glfm-source-block',
+  'data-details-content',
+  'data-delimiter',
+  'data-info',
+  'data-multiline',
   'data-canonical-src',
   'data-canonical-lang',
   'data-math-style',
@@ -57,7 +62,7 @@ const ALLOWED_TAGS = [
 /** 允许的地址协议。 */
 const ALLOWED_URI_REGEXP = /^(?:(?:https?|mailto|tel|ftp|smb|irc):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i;
 
-/** 净化 GitLab 返回的 HTML，保留导入所需语义。 */
+/** 净化 GLFM HTML，保留导入所需语义。 */
 export function sanitizeGitLabHtml(html: string): string {
   return DOMPurify.sanitize(html, {
     ALLOWED_TAGS,

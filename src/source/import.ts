@@ -1,5 +1,5 @@
 /**
- * 把 GitLab 渲染的 HTML 转换为 ProseMirror 文档，并建立源码块区间。
+ * 把 本地生成的 GLFM HTML 转换为 ProseMirror 文档，并建立源码块区间。
  *
  * 流程（设计文档 §4.3）：
  * 1. 保留原始 Markdown 字符串。
@@ -12,6 +12,7 @@
 import { DOMParser as ProseMirrorDOMParser, type Schema } from '@tiptap/pm/model';
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { sanitizeGitLabHtml } from '../material/sanitize';
+import { renderMarkdown as renderLocalMarkdown } from '../glfm/render';
 import { semanticSnapshot } from './semantic';
 import { SOURCE_ID_ATTR, nextSourceId } from './source-id';
 import { buildLineIndex, parseSourcePos, sourcePosToRange, type LineIndex } from './sourcepos';
@@ -141,14 +142,14 @@ function assemble(baseline: SourceBaseline): string {
 }
 
 /**
- * 导入 Markdown：调用宿主渲染、净化 HTML、解析节点并建立源码基线。
+ * 导入 Markdown：调用本地解析器、净化 HTML、解析节点并建立源码基线。
  *
  * 渲染结果缺少可靠 sourcepos 时，整篇作为单个源码块载入，`degraded` 为 true。
  */
 export async function importMarkdown(
   markdown: string,
   schema: Schema,
-  renderMarkdown: (markdown: string) => Promise<{ html: string }>,
+  renderMarkdown: (markdown: string) => Promise<{ html: string }> = renderLocalMarkdown,
 ): Promise<ImportResult> {
   const defaultEol = detectDefaultEol(markdown);
 

@@ -7,14 +7,14 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 import { createEnv, load } from './fixtures/env';
-import { createFixtureRenderer } from './fixtures/renderer';
+
 import { renderPreviewHtml } from '../src/material/preview';
 import type { DocumentContext } from '../src/core/types';
 import { GlfmEditorCore } from '../src/core/editor';
 import { resetSourceIdCounter } from '../src/source/source-id';
 import { mountGlfmEditor, mountAllGlfmEditors, unmountGlfmEditor } from '../src/standalone';
 
-const renderer = createFixtureRenderer();
+
 
 const context: DocumentContext = {
   documentId: 'doc',
@@ -28,7 +28,6 @@ function createCore(markdown: string) {
   return new GlfmEditorCore({
     markdown,
     context,
-    services: { renderMarkdown: async ({ markdown: value }) => renderer.render(value) },
     element: null,
     callbacks: { onUpdate: () => {}, onStateChange: () => {}, onError: () => {} },
   });
@@ -236,12 +235,10 @@ describe('阶段三：静态挂载', () => {
     const first = mountGlfmEditor(element, {
       markdown,
       context,
-      services: { renderMarkdown: async ({ markdown: value }) => renderer.render(value) },
     });
     const second = mountGlfmEditor(element, {
       markdown,
       context,
-      services: { renderMarkdown: async ({ markdown: value }) => renderer.render(value) },
     });
 
     expect(element.querySelectorAll('[data-testid="glfm-editor"]')).toHaveLength(1);
@@ -258,7 +255,6 @@ describe('阶段三：静态挂载', () => {
     const handle = mountGlfmEditor(element, {
       markdown: '# 标题\n',
       context,
-      services: { renderMarkdown: async ({ markdown: value }) => renderer.render(value) },
     });
 
     handle.destroy();
@@ -273,7 +269,6 @@ describe('阶段三：静态挂载', () => {
 
     const options = {
       context,
-      services: { renderMarkdown: async ({ markdown }: { markdown: string }) => renderer.render(markdown) },
     };
 
     const first = mountAllGlfmEditors('.glfm-slot', () => ({ markdown: '# 一\n', ...options }));
@@ -295,7 +290,6 @@ describe('阶段三：静态挂载', () => {
     const handle = mountGlfmEditor(element, {
       markdown: '# 标题\n',
       context,
-      services: { renderMarkdown: async ({ markdown: value }) => renderer.render(value) },
       onChange: changed,
     });
 

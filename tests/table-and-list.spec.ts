@@ -11,10 +11,10 @@ import type { Editor } from '@tiptap/core';
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import GlfmEditor from '../src/components/GlfmEditor.vue';
 import type { DocumentContext, EditorServices } from '../src/core/types';
-import { createFixtureRenderer } from './fixtures/renderer';
+
 import { resetSourceIdCounter } from '../src/source/source-id';
 
-const renderer = createFixtureRenderer();
+
 
 const context: DocumentContext = {
   documentId: 'doc',
@@ -23,7 +23,6 @@ const context: DocumentContext = {
 };
 
 const services: EditorServices = {
-  renderMarkdown: async ({ markdown }) => renderer.render(markdown),
 };
 
 /** 挂载编辑器并等待导入完成。 */

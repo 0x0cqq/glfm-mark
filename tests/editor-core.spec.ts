@@ -1,13 +1,15 @@
 /**
  * 编辑器核心行为测试：模式切换、历史边界、旧请求、上传位置删除。
  */
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GlfmEditorCore } from '../src/core/editor';
 import type { DocumentContext, EditorServices } from '../src/core/types';
-import { createFixtureRenderer } from './fixtures/renderer';
+import * as localRenderer from '../src/glfm/render';
+const realRender = localRenderer.renderMarkdown;
+afterEach(() => vi.restoreAllMocks());
 import { resetSourceIdCounter } from '../src/source/source-id';
 
-const renderer = createFixtureRenderer();
+
 
 const context: DocumentContext = {
   documentId: 'doc-1',
@@ -22,7 +24,6 @@ function createCore(services: Partial<EditorServices> = {}, markdown = '# 标题
     markdown,
     context,
     services: {
-      renderMarkdown: async ({ markdown: value }) => renderer.render(value),
       ...services,
     },
     element: null,
@@ -66,12 +67,11 @@ describe('模式切换', () => {
 
   it('重新导入失败时停留在源码模式并保留输入', async () => {
     let calls = 0;
-    const core = createCore({
-      renderMarkdown: async ({ markdown }) => {
+    const core = createCore();
+    vi.spyOn(localRenderer, 'renderMarkdown').mockImplementation(async (markdown) => {
         calls += 1;
         if (calls > 1) throw new Error('渲染失败');
-        return renderer.render(markdown);
-      },
+        return realRender(markdown);
     });
 
     await core.load('# 标题\n');
@@ -102,24 +102,24 @@ describe('请求与生命周期', () => {
   it('旧请求响应不覆盖新文档', async () => {
     /** 每次渲染挂起，等待测试显式放行。 */
     const pending: { markdown: string; resolve: () => void; aborted: boolean }[] = [];
-    const core = createCore({
-      renderMarkdown: ({ markdown, signal }) =>
+    const core = createCore();
+    vi.spyOn(localRenderer, 'renderMarkdown').mockImplementation((markdown, signal) =>
         new Promise((resolve, reject) => {
           const entry = {
             markdown,
             aborted: false,
             resolve: () => {
-              void renderer.render(markdown).then(resolve);
+              void realRender(markdown).then(resolve);
             },
           };
           pending.push(entry);
 
-          signal.addEventListener('abort', () => {
+          signal?.addEventListener('abort', () => {
             entry.aborted = true;
             reject(new DOMException('已取消', 'AbortError'));
           });
         }),
-    });
+    );
 
     const first = core.load('# 第一份\n');
     const second = core.load('# 第二份\n');
@@ -152,11 +152,8 @@ describe('请求与生命周期', () => {
   });
 
   it('预览请求失败时返回 null 且不抛出', async () => {
-    const core = createCore({
-      renderMarkdown: async () => {
-        throw new Error('网络错误');
-      },
-    });
+    const core = createCore();
+    vi.spyOn(localRenderer, 'renderMarkdown').mockRejectedValue(new Error('解析失败'));
 
     const result = await core.requestPreview();
     expect(result).toBeNull();
@@ -205,7 +202,6 @@ describe('保存与上传', () => {
       markdown: '# 标题\n',
       context,
       services: {
-        renderMarkdown: async ({ markdown }) => renderer.render(markdown),
         saveMarkdown: async () => {
           throw new Error('保存失败');
         },

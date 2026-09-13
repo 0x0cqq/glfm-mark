@@ -32,6 +32,7 @@ export const GlfmMathInline = Node.create({
       },
       delimiter: {
         default: DEFAULT_INLINE_MATH_DELIMITER,
+        parseHTML: (element) => element.getAttribute('data-delimiter') ?? DEFAULT_INLINE_MATH_DELIMITER,
       },
     };
   },
@@ -65,7 +66,7 @@ export const GlfmMathBlock = Node.create({
 
   addAttributes() {
     return {
-      delimiter: { default: DEFAULT_BLOCK_MATH_DELIMITER },
+      delimiter: { default: DEFAULT_BLOCK_MATH_DELIMITER, parseHTML: (element) => element.getAttribute('data-delimiter') ?? DEFAULT_BLOCK_MATH_DELIMITER },
       info: { default: 'math' },
     };
   },
@@ -219,7 +220,7 @@ export const GlfmMedia = Node.create({
   addAttributes() {
     return {
       /** 源码中的原始 Markdown 写法。 */
-      source: { default: '' },
+      source: { default: '', parseHTML: (element) => element.getAttribute('data-original') ?? '' },
       kind: {
         default: 'file',
         parseHTML: (element) => {
@@ -336,7 +337,7 @@ export const GlfmReference = Node.create({
   },
 });
 
-/** Emoji 短代码：显示 GitLab 返回的 Emoji，导出保留短代码。 */
+/** Emoji 短代码：显示本地 Emoji 字典结果，导出保留短代码。 */
 export const GlfmEmoji = Node.create({
   name: 'emoji',
   inline: true,
@@ -427,7 +428,7 @@ export const GlfmFootnoteReference = Node.create({
   },
 });
 
-/** GLFM 目录标记：编辑区显示占位卡片，预览交给服务端结果。 */
+/** GLFM 目录标记：编辑区显示占位卡片，预览显示原始目录标记。 */
 export const GlfmTableOfContents = Node.create({
   name: 'tableOfContents',
   group: 'block',
@@ -510,7 +511,7 @@ export const GlfmSourceBlock = Node.create({
   },
 
   parseHTML() {
-    return [{ tag: 'pre[data-glfm-source-block]' }];
+    return [{ tag: 'pre[data-glfm-source-block]', priority: 90, preserveWhitespace: 'full' }];
   },
 
   renderHTML({ node, HTMLAttributes }) {

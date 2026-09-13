@@ -15,13 +15,6 @@ export interface DocumentContext {
   assetBaseUrl: string;
 }
 
-/** 渲染请求。 */
-export interface RenderRequest {
-  markdown: string;
-  context: DocumentContext;
-  signal: AbortSignal;
-}
-
 /** 上传请求。 */
 export interface UploadRequest {
   file: File;
@@ -43,8 +36,6 @@ export interface SaveRequest {
 
 /** 宿主提供的服务。 */
 export interface EditorServices {
-  /** 返回兼容 GitLab 的 HTML；富文本导入需要可靠的 data-sourcepos。 */
-  renderMarkdown(request: RenderRequest): Promise<{ html: string }>;
   /** 上传附件，返回插入用的 Markdown。 */
   uploadFile?(request: UploadRequest): Promise<UploadResult>;
   /** 保存 Markdown。 */

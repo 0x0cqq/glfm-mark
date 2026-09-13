@@ -1,15 +1,17 @@
 /**
  * 编辑器组件集成测试：验证模式切换、v-model 回声、状态与保存上传行为。
  */
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
 import { nextTick } from 'vue';
 import GlfmEditor from '../src/components/GlfmEditor.vue';
 import type { DocumentContext, EditorServices, EditorState } from '../src/core/types';
-import { createFixtureRenderer } from './fixtures/renderer';
+import * as localRenderer from '../src/glfm/render';
+const realRender = localRenderer.renderMarkdown;
+afterEach(() => vi.restoreAllMocks());
 import { resetSourceIdCounter } from '../src/source/source-id';
 
-const renderer = createFixtureRenderer();
+
 
 /** 测试用文档上下文。 */
 const context: DocumentContext = {
@@ -21,7 +23,6 @@ const context: DocumentContext = {
 /** 创建渲染服务。 */
 function createServices(overrides: Partial<EditorServices> = {}): EditorServices {
   return {
-    renderMarkdown: async ({ markdown }) => renderer.render(markdown),
     ...overrides,
   };
 }
@@ -137,12 +138,11 @@ describe('编辑器组件', () => {
 
   it('源码重新导入失败时停留在源码模式并保留输入', async () => {
     let calls = 0;
-    const services = createServices({
-      renderMarkdown: async ({ markdown }) => {
+    const services = createServices();
+    vi.spyOn(localRenderer, 'renderMarkdown').mockImplementation(async (markdown) => {
         calls += 1;
         if (calls > 1) throw new Error('渲染失败');
-        return renderer.render(markdown);
-      },
+        return realRender(markdown);
     });
 
     const wrapper = await mountEditor('# 标题\n', services);
@@ -252,10 +252,8 @@ describe('编辑器组件', () => {
 
 describe('模式切换与预览', () => {
   it('预览模式调用渲染服务', async () => {
-    const renderMarkdown = vi.fn(async ({ markdown }: { markdown: string }) =>
-      renderer.render(markdown),
-    );
-    const wrapper = await mountEditor('# 标题\n', createServices({ renderMarkdown }));
+    const renderMarkdown = vi.spyOn(localRenderer, 'renderMarkdown');
+    const wrapper = await mountEditor('# 标题\n');
     renderMarkdown.mockClear();
 
     await wrapper.find('[data-testid="toolbar-mode-preview"]').trigger('click');
@@ -273,12 +271,11 @@ describe('模式切换与预览', () => {
 
   it('预览失败时显示错误并保留重试入口', async () => {
     let calls = 0;
-    const services = createServices({
-      renderMarkdown: async ({ markdown }) => {
+    const services = createServices();
+    vi.spyOn(localRenderer, 'renderMarkdown').mockImplementation(async (markdown) => {
         calls += 1;
         if (calls > 1) throw new Error('预览失败');
-        return renderer.render(markdown);
-      },
+        return realRender(markdown);
     });
 
     const wrapper = await mountEditor('# 标题\n', services);

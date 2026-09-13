@@ -26,7 +26,7 @@ const props = withDefaults(
   defineProps<{
     modelValue: string;
     context: DocumentContext;
-    services: EditorServices;
+    services?: EditorServices;
     readonly?: boolean;
     initialMode?: EditorMode;
   }>(),
@@ -138,7 +138,7 @@ watch(
 async function setMode(mode: EditorMode): Promise<boolean> {
   if (!core.value) return false;
   const ok = await core.value.setMode(mode);
-  if (ok) sourceText.value = core.value.getSourceMarkdown();
+  if (ok && core.value) sourceText.value = core.value.getSourceMarkdown();
   return ok;
 }
 
@@ -397,8 +397,8 @@ const showPreview = computed(() => state.value.mode === 'preview');
       :editor="editor"
       :mode="state.mode"
       :readonly="readonly"
-      :can-save="Boolean(services.saveMarkdown)"
-      :can-upload="Boolean(services.uploadFile)"
+      :can-save="Boolean(services?.saveMarkdown)"
+      :can-upload="Boolean(services?.uploadFile)"
       :saving="state.saving"
       :uploading="state.uploading"
       :block-style="blockStyle"
@@ -438,7 +438,6 @@ const showPreview = computed(() => state.value.mode === 'preview');
       v-if="showPreview"
       :markdown="core?.getMarkdown() ?? modelValue"
       :context="context"
-      :services="services"
     />
 
     <LinkDialog

@@ -1,18 +1,18 @@
 /**
- * 预览组件：只展示预览，接受 Markdown、context 和 render 服务。
+ * 预览组件：只展示预览，接受 Markdown 与 context。
  *
  * 预览只用于展示，不回写 Markdown，也不反向替换当前编辑文档。
  */
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue';
-import type { DocumentContext, EditorServices } from '../core/types';
+import type { DocumentContext } from '../core/types';
+import { renderMarkdown } from '../glfm/render';
 import { renderPreviewHtml } from '../material/preview';
 
 const props = withDefaults(
   defineProps<{
     markdown: string;
     context: DocumentContext;
-    services: EditorServices;
     /** 输入变化后的刷新延迟，单位毫秒。 */
     delay?: number;
   }>(),
@@ -35,11 +35,7 @@ async function refresh(): Promise<void> {
   abort = new AbortController();
 
   try {
-    const { html } = await props.services.renderMarkdown({
-      markdown: props.markdown,
-      context: props.context,
-      signal: abort.signal,
-    });
+    const { html } = await renderMarkdown(props.markdown, abort.signal);
 
     if (current !== seq) return;
 
@@ -72,6 +68,7 @@ watch(() => props.context.documentId, schedule);
 
 onBeforeUnmount(() => {
   if (timer) clearTimeout(timer);
+  seq += 1;
   abort?.abort();
 });
 

@@ -1,5 +1,5 @@
 /**
- * 开发演示页：离线运行编辑器，渲染服务由夹具提供。
+ * 开发演示页：离线运行编辑器，使用浏览器本地 GLFM 渲染。
  *
  * 该页面用于人工检查与 Playwright 视觉验证，不进入发布产物。
  */
@@ -8,10 +8,8 @@ import GlfmEditor from '../src/components/GlfmEditor.vue';
 import '../src/styles/style.css';
 // 发布包不内联 KaTeX 样式，演示页自行引入以保证公式排版正确。
 import 'katex/dist/katex.min.css';
-import { createFixtureRenderer } from '../tests/fixtures/renderer';
 import { demoMarkdown } from './demo-markdown';
 
-const renderer = createFixtureRenderer();
 
 const markdown = ref(demoMarkdown);
 const mode = ref<'wysiwyg' | 'source' | 'preview'>('wysiwyg');
@@ -22,16 +20,11 @@ const context = {
   assetBaseUrl: 'https://example.com/docs/assets/',
 };
 
-const services = {
-  renderMarkdown: async ({ markdown: value }: { markdown: string }) => renderer.render(value),
-};
-
 const app = createApp({
   render() {
     return h(GlfmEditor, {
       modelValue: markdown.value,
       context,
-      services,
       initialMode: mode.value,
       'onUpdate:modelValue': (value: string) => {
         markdown.value = value;

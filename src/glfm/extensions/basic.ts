@@ -40,6 +40,7 @@ export const GlfmBlockquote = Blockquote.extend({
       ...this.parent?.(),
       multiline: {
         default: false,
+        parseHTML: (element) => element.getAttribute('data-multiline') === 'true',
         rendered: false,
       },
     };
@@ -67,7 +68,25 @@ export const GlfmOrderedList = OrderedList.extend({
 });
 
 /** 列表项。 */
-export const GlfmListItem = ListItem;
+export const GlfmListItem = ListItem.extend({
+  /** 混合列表与有序任务项保留原来的列表类型。 */
+  addAttributes() {
+    return {
+      taskMark: {
+        default: null,
+        rendered: false,
+        parseHTML: (element) => {
+          const input = element.querySelector(':scope > input, :scope > p > input');
+          return input ? input.hasAttribute('data-inapplicable') ? '~' : input.hasAttribute('checked') ? 'x' : ' ' : null;
+        },
+      },
+    };
+  },
+  /** 在混合列表项正文前显示任务状态，用户可通过源码修改标记。 */
+  renderHTML({ node, HTMLAttributes }) {
+    return ['li', mergeAttributes(HTMLAttributes, node.attrs.taskMark !== null ? { 'data-task-mark': node.attrs.taskMark } : {}), 0];
+  },
+});
 
 /** 列表键盘操作：Tab / Shift-Tab 缩进与取消缩进，Backspace 处理边界情况。 */
 export const GlfmListKeymap = ListKeymap;

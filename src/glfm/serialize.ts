@@ -254,6 +254,7 @@ function renderBlock(node: ProseMirrorNode, options: SerializeOptions): string {
       return renderFence(node, codeBlockInfo(node), options);
 
     case 'mathBlock':
+      if (node.attrs.delimiter === '$$') return `$$${eol}${node.textContent.replace(/\n$/, '')}${eol}$$`;
       return renderFence(node, (node.attrs.info as string) || 'math', options);
 
     case 'mermaidBlock':
@@ -356,7 +357,7 @@ function renderList(
 ): string {
   const items: string[] = [];
   node.forEach((item, _offset, index) => {
-    const marker = markerFor(index);
+    const marker = `${markerFor(index)}${item.attrs.taskMark !== null && item.attrs.taskMark !== undefined ? `[${item.attrs.taskMark}] ` : ''}`;
     const body = renderListItemBlocks(item, options);
     const indented = indentContinuation(body, ' '.repeat(marker.length));
     items.push(`${marker}${indented}`);

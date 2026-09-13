@@ -1,6 +1,7 @@
 # 0003. 导入依赖宿主渲染的 HTML 与 sourcepos
 
-- 状态：accepted
+- 状态：superseded
+- 替代：[0007. 浏览器本地渲染](0007-browser-rendering.md)
 - 日期：2026-09-09
 - 关联：`docs/architecture.md`、`src/source/import.ts`、`src/adapters/gitlab.ts`
 
