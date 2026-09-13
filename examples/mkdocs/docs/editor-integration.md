@@ -109,6 +109,7 @@ window.addEventListener('pagehide', () => {
 ## 主题与页面增强脚本
 
 挂载选项 `theme: 'material'` 为默认值，正文沿用本站 Material CSS；
+挂载后通过 `editor.setTheme(theme)` 切换外观，保留当前内容与撤销历史。
 选择 `theme: 'modern'` 可使用另一套写作外观。行号、选区格式框、大纲与快捷键两者共用。
 
 公式与图表由编辑器管理。宿主的全页 KaTeX auto-render 应配置：

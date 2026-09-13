@@ -60,6 +60,7 @@ export function mountGlfmEditor(
   mounted.get(element)?.handle.destroy();
 
   const markdown = ref(options.markdown ?? '');
+  const theme = ref<EditorTheme>(options.theme ?? 'material');
   const editor = ref<GlfmEditorHandle | null>(null);
 
   const app = createApp({
@@ -72,7 +73,7 @@ export function mountGlfmEditor(
         context: options.context,
         services: options.services,
         readonly: options.readonly ?? false,
-        theme: options.theme,
+        theme: theme.value,
         initialMode: options.initialMode ?? 'wysiwyg',
         'onUpdate:modelValue': (value: string) => {
           markdown.value = value;
@@ -86,6 +87,8 @@ export function mountGlfmEditor(
   app.mount(element);
 
   const handle: MountedGlfmEditor = {
+    /** 外观只更新组件属性，不重建编辑器。 */
+    setTheme(value: EditorTheme) { theme.value = value; },
     getMarkdown: () => markdown.value,
     async setMarkdown(value: string) {
       markdown.value = value;

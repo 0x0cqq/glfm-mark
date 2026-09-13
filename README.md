@@ -153,9 +153,9 @@ Vue 实例提供 `getMarkdown()`、`focus()`、`setMode(mode)`、`markSaved(mark
 事件为 `update:modelValue`、`state-change`、`error`、`saved`。
 
 Standalone 使用 `markdown` 初始化，支持 `onChange`、`onError` 回调；句柄提供
-`getMarkdown()`、`setMarkdown(markdown)`、`setMode(mode)`、`markSaved(markdown)`、`destroy()`。
+`getMarkdown()`、`setMarkdown(markdown)`、`setMode(mode)`、`setTheme(theme)`、`markSaved(markdown)`、`destroy()`。
 
-`GlfmPreview` 接收 `markdown`、`context`，可选 `delay` 默认为 350 ms，提供 `refresh()`。
+`GlfmPreview` 接收 `markdown`、`context` 与可选 `theme`，可选 `delay` 默认为 350 ms，提供 `refresh()`。
 `renderMarkdown(markdown, signal?)` 可独立生成带源码位置的 HTML；
 `renderPreviewHtml(html, context)` 净化并添加 Material、KaTeX、Mermaid 与代码高亮展示。
 

@@ -75,6 +75,8 @@ export interface GlfmEditorHandle {
 
 /** 静态挂载入口返回的句柄。 */
 export interface MountedGlfmEditor {
+  /** 切换外观，保留文档、选区和撤销历史。 */
+  setTheme(theme: EditorTheme): void;
   getMarkdown(): string;
   setMarkdown(markdown: string): Promise<void>;
   markSaved(markdown: string): void;

@@ -12,12 +12,15 @@ function init() {
   container = next;
   if (!next) return;
   const status = document.getElementById('glfm-status');
+  const appearance = document.getElementById('glfm-theme');
   const directory = new URL('./', location.href).href;
   editor = mountGlfmEditor(next, {
     markdown: demoMarkdown,
+    theme: appearance?.value ?? 'material',
     context: { documentId: 'demo', linkBaseUrl: directory, assetBaseUrl: directory },
     onError(error) { if (status) status.textContent = error.message; },
   });
+  if (appearance) appearance.onchange = () => editor?.setTheme(appearance.value);
 }
 const subscription = typeof document$ !== 'undefined' ? document$.subscribe(init) : undefined;
 if (!subscription) init();

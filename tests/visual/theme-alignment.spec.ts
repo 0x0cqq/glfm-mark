@@ -47,3 +47,26 @@ for (const scheme of ['default', 'slate']) {
     expect(errors).toEqual([]);
   });
 }
+
+test('静态挂载中切换 Modern 外观保留编辑历史与完整工具', async ({ page }, testInfo) => {
+  await page.goto(`${process.env.GLFM_SITE_URL ?? 'http://127.0.0.1:8020'}/editor-offline/`);
+  await expect(page.locator('.ProseMirror h1')).toBeVisible();
+  await page.getByLabel('编辑器外观').selectOption('modern');
+  await expect(page.getByTestId('glfm-editor')).toHaveAttribute('data-theme', 'modern');
+  await expect(page.getByLabel('插入内容', { exact: true })).toHaveCSS('display', 'inline-flex');
+  await page.locator('.ProseMirror > p').first().click();
+  await page.keyboard.press('Home');
+  await page.keyboard.press('Shift+End');
+  await expect(page.getByTestId('selection-toolbar')).toBeVisible();
+  await page.getByTestId('selection-bold').click();
+  await expect(page.locator('.glfm-editor__save-state')).toHaveText('未保存的修改');
+  await page.screenshot({ path: testInfo.outputPath('modern-material-host-light.png') });
+  await page.evaluate(() => document.body.dataset.mdColorScheme = 'slate');
+  await page.screenshot({ path: testInfo.outputPath('modern-material-host-dark.png') });
+  await page.getByLabel('编辑器外观').selectOption('material');
+  await expect(page.getByTestId('glfm-editor')).toHaveAttribute('data-theme', 'material');
+  await page.getByTestId('toolbar-undo').click();
+  await expect(page.locator('.glfm-editor__save-state')).toHaveText('内容未修改');
+  await expect(page.getByTestId('editor-gutter').locator('button').first()).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+});

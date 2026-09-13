@@ -22,6 +22,14 @@
 
 ## 编辑器
 
+下拉选择外观；切换主题时保留当前修改和撤销历史。亮暗配色使用站点右上角的主题按钮。
+
+<label for="glfm-theme">编辑器外观</label>
+<select id="glfm-theme" class="glfm-editor__select" aria-label="编辑器外观">
+  <option value="material">MkDocs Material</option>
+  <option value="modern">Modern 写作</option>
+</select>
+
 <div id="glfm-editor"></div>
 
 <p id="glfm-status" class="glfm-example-status"></p>
