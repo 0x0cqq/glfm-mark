@@ -1,86 +1,114 @@
 # 实际接入示例
 
-本页说明宿主如何注入渲染、上传、保存和文档基准 URL。示例**不包含真实令牌或项目凭据**。
+本页说明在已有 MkDocs Material 站点中部署 standalone。构建产物、普通 HTML 示例与
+认证前提见仓库根目录 `README.md` 的「Standalone 静态部署」。本页代码需要接入宿主
+实际的渲染、认证与保存服务；尚未完成真实 GitLab 实例验证。
 
-## 宿主需要提供的内容
+## 文件与配置
+
+执行 `npm run build`，将 `dist/standalone.js`、`dist/standalone.css`、`dist/katex.css`
+和完整的 `dist/assets/`、`dist/fonts/` 复制到 MkDocs 的 `docs/glfm-mark/`。
+将下面的初始化脚本保存为 `docs/assets/editor.js`，宿主服务保存为
+`docs/assets/host-services.js`。
+
+在现有 `mkdocs.yml` 中合并以下配置，保留原有项：
+
+```yaml
+extra_css:
+  - glfm-mark/standalone.css
+  - glfm-mark/katex.css
+extra_javascript:
+  - path: assets/editor.js
+    type: module
+```
+
+在需要编辑器的 Markdown 页面中添加：
+
+```html
+<div id="glfm-editor" data-document-id="wiki-page-1"></div>
+<p id="glfm-status" role="status"></p>
+```
+
+MkDocs 会根据页面层级生成资源 URL。脚本中的模块导入相对脚本文件解析，因此从
+`assets/editor.js` 引用库的路径为 `../glfm-mark/standalone.js`。
+运行宿主原有的 `mkdocs build`，将整个输出目录按原有 Pages 流程发布，保留资源目录。
+
+## 宿主服务
+
+`host-services.js` 是需要自行实现的宿主模块，导出 `loadDocument(documentId)` 和
+`services`。`loadDocument` 返回 `{ markdown, context }`；`context` 的 `documentId`
+标识当前文档，`linkBaseUrl` 与 `assetBaseUrl` 是绝对目录 URL，由宿主根据仓库文件或
+Wiki 页面位置提供。
 
 | 服务 | 用途 | 是否必需 |
 |---|---|---|
-| `renderMarkdown` | 调用 GitLab Markdown API 渲染 GLFM | 必需 |
-| `uploadFile` | 上传附件并返回插入用的 Markdown | 可选 |
-| `saveMarkdown` | 保存当前 Markdown | 可选 |
+| `renderMarkdown({ markdown, context, signal })` | 返回 `{ html }`；富文本导入需要兼容 GitLab 的 HTML 与可靠 `data-sourcepos` | 必需 |
+| `uploadFile({ file, context, signal })` | 上传附件，返回 `{ markdown }` 供插入 | 可选 |
+| `saveMarkdown({ markdown, context, signal })` | 保存请求发起时的 Markdown 快照，成功时 resolve | 可选 |
 
-`DocumentContext` 中的 `linkBaseUrl` 与 `assetBaseUrl` 必须是绝对目录 URL，
-由宿主根据仓库文件或 Wiki 页面位置提供；组件不会猜测当前 GitLab 路由。
+使用 GitLab 时，可在该模块中从 `../glfm-mark/standalone.js` 导入
+`createGitLabMarkdownService`，提供 `baseUrl`、`project` 和请求时执行的 `getHeaders`，
+将其 `renderMarkdown` 放入 `services`。认证由宿主会话提供，不写入静态文件。
+浏览器直连跨域服务需要服务端允许跨域请求；也可通过宿主已有的受认证代理接入。
 
-## 接入代码
+上传与保存实现应传递 `signal`，检查 HTTP 状态和返回字段，失败时抛出错误。组件据此
+保留当前内容并显示失败；`fetch` 收到 HTTP 4xx/5xx 本身不会抛出异常。
+静态页面托管不会自动获得文档读取、上传或保存 API。
 
-```js
-import {
-  mountGlfmEditor,
-  createGitLabMarkdownService,
-} from './assets/standalone.js';
+## 初始化与即时导航
 
-const markdown = createGitLabMarkdownService({
-  baseUrl: 'https://gitlab.example.com',
-  project: 'group/project',
-  // 凭据由宿主管理，不写入构建产物、配置、日志或本地存储。
-  getHeaders: async () => ({ Authorization: `Bearer ${await getSessionToken()}` }),
-});
-
-const editor = mountGlfmEditor(document.getElementById('glfm-editor'), {
-  markdown: initialMarkdown,
-  context: {
-    documentId: 'wiki-page-1',
-    linkBaseUrl: 'https://gitlab.example.com/group/project/-/wikis/',
-    assetBaseUrl: 'https://gitlab.example.com/group/project/-/wikis/uploads/',
-  },
-  services: {
-    renderMarkdown: markdown.renderMarkdown,
-    // 上传：返回 GitLab Wiki 附件接口的 link.markdown
-    async uploadFile({ file, signal }) {
-      const body = new FormData();
-      body.append('file', file);
-      const response = await fetch(
-        'https://gitlab.example.com/api/v4/projects/group%2Fproject/wikis/attachments',
-        { method: 'POST', body, signal, headers: await getAuthHeaders() },
-      );
-      const payload = await response.json();
-      return { markdown: payload.link.markdown };
-    },
-    // 保存：宿主自行决定提交目标
-    async saveMarkdown({ markdown: snapshot, signal }) {
-      await fetch('/api/wiki-page-1', {
-        method: 'PUT',
-        body: JSON.stringify({ content: snapshot }),
-        signal,
-      });
-    },
-  },
-  onError(error) {
-    console.error(`[${error.operation}] ${error.message}`);
-  },
-});
-
-// 页面离开时销毁，释放监听器与未完成请求。
-window.addEventListener('beforeunload', () => editor.destroy());
-```
-
-## 即时导航
-
-Material 的 `document$` 会在即时导航后重新渲染页面。每次导航后检查新容器并挂载，
-同一容器只会存在一个实例：
+`docs/assets/editor.js`：
 
 ```js
-import { mountAllGlfmEditors, unmountGlfmEditor } from './assets/standalone.js';
+import { mountGlfmEditor } from '../glfm-mark/standalone.js';
+import { loadDocument, services } from './host-services.js';
 
-document$.subscribe(() => {
-  mountAllGlfmEditors('#glfm-editor', (element) => ({
-    markdown: element.dataset.markdown ?? '',
-    context: { /* ... */ },
-    services: { renderMarkdown },
-  }));
+let editor;
+let container;
+let navigation = 0;
+
+/** 切换页面时释放旧实例，并只在当前容器中载入文档。 */
+async function init() {
+  const next = document.getElementById('glfm-editor');
+  if (next && next === container) return;
+  const current = ++navigation;
+  editor?.destroy();
+  editor = undefined;
+  container = next;
+  if (!next) return;
+  const status = document.getElementById('glfm-status');
+
+  try {
+    const { markdown, context } = await loadDocument(next.dataset.documentId);
+    if (current !== navigation || !next.isConnected) return;
+    editor = mountGlfmEditor(next, {
+      markdown,
+      context,
+      services,
+      /** 在宿主页面报告导入、预览、上传和保存错误。 */
+      onError(error) { if (status) status.textContent = error.message; },
+    });
+  } catch (error) {
+    if (current !== navigation) return;
+    container = undefined;
+    if (status) status.textContent = `文档载入失败：${error.message}`;
+  }
+}
+
+// Material 的 document$ 在初次加载和即时导航后通知；普通页面直接初始化。
+const subscription = typeof document$ !== 'undefined'
+  ? document$.subscribe(() => void init())
+  : undefined;
+if (!subscription) void init();
+
+/** 页面卸载时取消订阅，废弃未完成的读取并销毁编辑器。 */
+window.addEventListener('pagehide', () => {
+  navigation += 1;
+  subscription?.unsubscribe();
+  editor?.destroy();
 });
 ```
 
-组件内部用 `WeakMap` 记录已挂载的容器：同一容器重复挂载会先销毁旧实例。
+导航可能移除旧容器，宿主需主动销毁其句柄以释放资源。`mountGlfmEditor` 在同一容器重复
+调用会替换旧实例；`mountAllGlfmEditors` 会跳过已经挂载的容器，两者都不会自动跟踪页面导航。
+离开页面前是否保存未提交内容，由宿主的导航与保存流程决定。

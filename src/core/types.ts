@@ -43,7 +43,7 @@ export interface SaveRequest {
 
 /** 宿主提供的服务。 */
 export interface EditorServices {
-  /** 调用 GitLab Markdown API 渲染 GLFM。 */
+  /** 返回兼容 GitLab 的 HTML；富文本导入需要可靠的 data-sourcepos。 */
   renderMarkdown(request: RenderRequest): Promise<{ html: string }>;
   /** 上传附件，返回插入用的 Markdown。 */
   uploadFile?(request: UploadRequest): Promise<UploadResult>;

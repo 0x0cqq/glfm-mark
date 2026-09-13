@@ -12,31 +12,27 @@
 在仓库根目录执行：
 
 ```bash
+# 首次安装 Node 依赖；Python 虚拟环境安装见仓库 README
+npm ci
+
 # 1. 生成离线示例 fixture
 npm run fixtures
 
 # 2. 构建发布产物（含独立的 KaTeX 样式与字体）
 npm run build
 
-# 3. 把产物复制到示例站点
-mkdir -p examples/mkdocs/docs/glfm-mark
-cp -r dist/standalone.js dist/standalone.css dist/katex.css dist/assets dist/fonts \
-  examples/mkdocs/docs/glfm-mark/
+# 3. 复制编辑器与参考页所需的 JS、CSS 和字体
+npm run examples:prepare
 
-# 4. 参考页也需要 KaTeX 样式与字体
-mkdir -p examples/mkdocs/docs/assets/vendor/katex
-cp -r node_modules/katex/dist/katex.min.js node_modules/katex/dist/auto-render.min.js \
-  node_modules/katex/dist/katex.min.css node_modules/katex/dist/fonts \
-  examples/mkdocs/docs/assets/vendor/katex/
-
-# 5. 构建并启动 MkDocs
+# 4. 构建并启动 MkDocs（Windows；Linux/macOS 使用 .venv/bin/python）
 .venv/Scripts/python -m mkdocs build --config-file examples/mkdocs/mkdocs.yml
 .venv/Scripts/python -m mkdocs serve --config-file examples/mkdocs/mkdocs.yml
 ```
 
 站点默认地址为 <http://127.0.0.1:8000/>。
 
-第 3、4 步的产物不入库（见 `.gitignore`），需要首次构建时手动执行一次。
+生成的资源不入库（见 `.gitignore`），更新构建产物后需重新执行 `npm run examples:prepare`。
+Windows 环境可用 `npm run examples:build` 一次完成上述生成、复制和站点构建。
 
 ## 说明
 

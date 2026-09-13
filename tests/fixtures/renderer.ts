@@ -3,7 +3,7 @@
  *
  * 它用 markdown-it 生成近似 GitLab 的 HTML，并按 GitLab 的规则附加
  * `data-sourcepos`（1 起始、UTF-8 字节列、闭区间）。这是夹具，不是完整的
- * 本地 GLFM 引擎；真实使用时由宿主调用 GitLab Markdown API。
+ * 本地 GLFM 引擎；真实使用时由宿主提供满足导入契约的渲染服务。
  */
 import MarkdownIt from 'markdown-it';
 import type Token from 'markdown-it/lib/token.mjs';

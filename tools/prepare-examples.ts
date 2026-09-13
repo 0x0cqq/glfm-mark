@@ -1,9 +1,8 @@
 /**
  * 准备 MkDocs 示例站点所需的资源。
  *
- * 1. 生成离线示例的 HTML fixture。
- * 2. 把库构建产物复制到示例站点。
- * 3. 复制与编辑器同版本的 KaTeX 资源，供参考页离线渲染。
+ * 1. 把库构建产物复制到示例站点。
+ * 2. 复制与编辑器同版本的 KaTeX 资源，供参考页离线渲染。
  *
  * 运行：`npm run examples:prepare`（需先执行 `npm run build`）
  */
@@ -35,6 +34,8 @@ function main(): void {
 
   copy(resolve(root, 'dist/standalone.js'), resolve(target, 'standalone.js'));
   copy(resolve(root, 'dist/standalone.css'), resolve(target, 'standalone.css'));
+  copy(resolve(root, 'dist/katex.css'), resolve(target, 'katex.css'));
+  cpSync(resolve(root, 'dist/fonts'), resolve(target, 'fonts'), { recursive: true });
   cpSync(resolve(root, 'dist/assets'), resolve(target, 'assets'), { recursive: true });
 
   const katex = resolve(docs, 'assets/vendor/katex');

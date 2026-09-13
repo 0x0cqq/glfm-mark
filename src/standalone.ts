@@ -127,6 +127,8 @@ export function unmountGlfmEditor(element: HTMLElement): void {
 }
 
 export { GlfmEditor };
+export { createGitLabMarkdownService } from './adapters/gitlab';
+export type { GitLabMarkdownService, GitLabMarkdownServiceOptions } from './adapters/gitlab';
 export type {
   DocumentContext,
   EditorError,

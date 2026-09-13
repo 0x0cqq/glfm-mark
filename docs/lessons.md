@@ -91,6 +91,10 @@
   服务端行为的新能力都需要真实实例验证。
 - 防复发：`docs/compatibility.md` 与示例页面都写明该限制；真实集成示例单独
   记录接入方式而不声称已验证。
+- 依据补充：[GitLab Markdown API 文档](https://docs.gitlab.com/api/markdown/)未承诺
+  返回 `data-sourcepos`；接入目标实例时应实际检查源码位置与 HTML 结构，不能把
+  fixture 主动添加的属性视为公共 API 的保证。当前接口替代条件见
+  [README](../README.md#渲染依赖与离线能力)。
 
 ## 库模式构建会把 CSS 引用的字体内联为 base64
 

@@ -24,7 +24,8 @@
       "types": "./dist/standalone.d.ts",
       "import": "./dist/standalone.js"
     },
-    "./style.css": "./dist/style.css"
+    "./style.css": "./dist/style.css",
+    "./katex.css": "./dist/katex.css"
   },
   "scripts": {
     "dev": "vite",

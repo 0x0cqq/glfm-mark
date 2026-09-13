@@ -59,6 +59,16 @@
 
 ## 模块边界
 
+### 宿主渲染契约
+
+编辑器调用注入的 `EditorServices.renderMarkdown`，核心不直接绑定 GitLab 网络接口。
+默认适配器在 `src/adapters/gitlab.ts` 中实现；替代渲染器需要返回兼容的 HTML 结构与
+可靠的 `data-sourcepos`，详见 [README 的渲染说明](../README.md#渲染依赖与离线能力)。
+当前包没有发布完整的本地 GLFM 渲染器，standalone 也需要宿主提供该服务。
+
+`tests/fixtures/renderer.ts` 在测试和开发演示中即时生成近似 HTML；MkDocs 离线示例则
+使用预生成的固定文档映射。它们不证明真实 GitLab API 会返回所需的源码位置。
+
 ### 源码保留（`src/source/`）
 
 保留单位是**顶层源码块**：一个段落、标题、表格、列表、引用或折叠块分别构成一个单位。
@@ -116,13 +126,14 @@
 | 产物 | 说明 |
 |---|---|
 | `dist/index.js` | ESM 库入口，Vue 为 peer dependency |
-| `dist/standalone.js` | 静态挂载入口，内联 Vue |
+| `dist/standalone.js` | 静态挂载入口，内联 Vue，导出挂载函数与 GitLab 适配器 |
 | `dist/style.css` / `dist/standalone.css` | 样式，与对应入口搭配 |
 | `dist/katex.css` + `dist/fonts/` | KaTeX 样式与字体，由宿主页面引入 |
 | `dist/assets/*` | 按需加载的 Mermaid、KaTeX 与高亮代码块 |
 | `dist/*.d.ts` | 类型声明 |
 
 静态资源的引用使用相对路径，可部署到 GitLab Pages 的项目子目录。
+构建、资源复制、页面初始化和 MkDocs 接入见 [README](../README.md#standalone-静态部署)。
 
 公式排版依赖 `dist/katex.css`：库模式构建会把 CSS 中引用的字体内联为 base64，
 因此 KaTeX 样式与字体独立发布，由宿主页面通过 `<link rel="stylesheet">` 引入。
