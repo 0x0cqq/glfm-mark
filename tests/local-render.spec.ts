@@ -66,6 +66,73 @@ describe('浏览器本地 GLFM', () => {
     expect((await renderMarkdown(source)).html).not.toContain('<script>');
   });
 
+  it.each([
+    '???+ question "标题"\n    第一段\n\n    第二段',
+    '=== "标签"\n    标签内容',
+  ])('MkDocs 容器作为完整源码块保留：%s', async (container) => {
+    const source = `前文\n\n${container}\n\n后文\n`;
+    const env = createEnv();
+    const result = await load(env, source);
+    expect(result.degraded).toBe(false);
+    expect(result.doc.childCount).toBe(3);
+    expect(result.doc.child(1).type.name).toBe('sourceBlock');
+    expect(env.controller.export(result.doc)).toBe(source);
+  });
+
+  it('MkDocs 提示块支持标题和正文编辑，其他块原样保留', async () => {
+    const source = '# 标题\n\n!!!theorem "命题"\n    **正文**\n\n结尾\n';
+    const env = createEnv();
+    const result = await load(env, source);
+    expect(result.degraded, (await renderMarkdown(source)).html).toBe(false);
+    expect(result.doc.child(1).type.name).toBe('mkdocsAdmonition');
+    expect(env.controller.export(result.doc)).toBe(source);
+    let position = -1;
+    result.doc.descendants((node, pos) => { if (node.isText && node.text === '正文') position = pos; });
+    expect(position).toBeGreaterThan(0);
+    const state = EditorState.create({ doc: result.doc });
+    const changed = state.apply(state.tr.insertText('新', position)).doc;
+    expect(env.controller.export(changed)).toBe('# 标题\n\n!!!theorem "命题"\n    **新正文**\n\n结尾\n');
+  });
+
+  it('MkDocs note 的默认标题和修饰词可结构化往返', async () => {
+    for (const source of ['!!!note\n    正文', '!!!note inline end\n    第一段\n\n    第二段']) {
+      const env = createEnv();
+      const result = await load(env, source);
+      expect(result.degraded).toBe(false);
+      expect(result.doc.firstChild?.type.name).toBe('mkdocsAdmonition');
+      expect(result.doc.firstChild?.firstChild?.textContent).toBe('Note');
+      expect(env.controller.export(result.doc)).toBe(source);
+    }
+  });
+
+  it('MkDocs theorem 的公式标题与有序列表在正文编辑后仍可解析', async () => {
+    const source = '!!!theorem "界限 $\\Omega(n \\lg n)$"\n    1. 第一项\n    2. 第二项\n\n    因此成立。\n\n尾段';
+    const env = createEnv();
+    const result = await load(env, source);
+    expect(result.degraded).toBe(false);
+    expect(result.doc.firstChild?.type.name).toBe('mkdocsAdmonition');
+    expect(result.doc.firstChild?.firstChild?.textContent).toContain('界限');
+    let position = -1;
+    result.doc.descendants((node, pos) => { if (node.isText && node.text === '第二项') position = pos; });
+    const changed = EditorState.create({ doc: result.doc }).tr.insertText('新', position).doc;
+    const output = env.controller.export(changed);
+    expect(output).toContain('!!!theorem "界限 $\\Omega(n \\lg n)$"');
+    expect(output).toContain('    2. 新第二项');
+    expect(output.endsWith('\n\n尾段')).toBe(true);
+    expect((await load(createEnv(), output)).degraded).toBe(false);
+  });
+
+  it('修改 CRLF 文档中的 MkDocs note 保留整篇换行格式', async () => {
+    const source = '前文\r\n\r\n!!!note\r\n    旧正文\r\n\r\n后文\r\n';
+    const env = createEnv();
+    const result = await load(env, source);
+    expect(result.degraded).toBe(false);
+    let position = -1;
+    result.doc.descendants((node, pos) => { if (node.isText && node.text === '旧正文') position = pos; });
+    const changed = EditorState.create({ doc: result.doc }).tr.insertText('新', position).doc;
+    expect(env.controller.export(changed)).toBe('前文\r\n\r\n!!!note\r\n    新旧正文\r\n\r\n后文\r\n');
+  });
+
   it('未闭合 details 保留源码，闭合嵌套 details 不吞掉后续段落', async () => {
     const env = createEnv();
     const open = await load(env, '<details>\n<summary>标题</summary>\n正文');

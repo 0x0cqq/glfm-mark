@@ -229,7 +229,8 @@
 
 /* ------------------------------------------------------- 提示块（编辑区） */
 
-.glfm-editor[data-theme="modern"] .glfm-editor__content .markdown-alert {
+.glfm-editor[data-theme="modern"] .glfm-editor__content .markdown-alert,
+.glfm-editor[data-theme="modern"] .glfm-editor__content [data-mkdocs-admonition] {
   border-left: 4px solid var(--glfm-accent);
   border-radius: var(--glfm-radius);
   padding: 0.5rem 0.7rem;
@@ -242,7 +243,8 @@
 .glfm-editor[data-theme="modern"] .glfm-editor__content .markdown-alert-warning { border-left-color: #ff9100; }
 .glfm-editor[data-theme="modern"] .glfm-editor__content .markdown-alert-caution { border-left-color: #ff5252; }
 
-.glfm-editor[data-theme="modern"] .glfm-editor__content .markdown-alert-title {
+.glfm-editor[data-theme="modern"] .glfm-editor__content .markdown-alert-title,
+.glfm-editor[data-theme="modern"] .glfm-editor__content [data-mkdocs-admonition] > .admonition-title {
   font-weight: 700;
   margin: 0 0 0.2rem;
 }

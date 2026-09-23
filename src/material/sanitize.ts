@@ -34,6 +34,11 @@ const ALLOWED_ATTRS = [
   // GitLab 语义属性
   'data-sourcepos',
   'data-glfm-source-block',
+  'data-mkdocs-admonition',
+  'data-mkdocs-type',
+  'data-mkdocs-modifiers',
+  'data-mkdocs-title-explicit',
+  'data-mkdocs-title',
   'data-details-content',
   'data-delimiter',
   'data-info',

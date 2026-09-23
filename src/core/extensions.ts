@@ -4,12 +4,14 @@
  * schema（`src/glfm/schema.ts`）保持无 DOM 依赖，供源码保留层与测试使用；
  * 本模块只供浏览器端编辑器使用。
  */
-import type { Extensions } from '@tiptap/core';
+import { mergeAttributes, type Extensions } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
-import { glfmExtensions } from '../glfm/schema';
+import { glfmExtensions, GlfmLink } from '../glfm/schema';
 import { GlfmCodeBlock } from '../glfm/extensions/basic';
 import { GlfmDetails, GlfmDetailsSummary } from '../glfm/extensions/structure';
-import { GlfmMathBlock, GlfmMathInline, GlfmMermaidBlock, GlfmSourceBlock } from '../glfm/extensions/special';
+import { GlfmImage, GlfmMathBlock, GlfmMathInline, GlfmMedia, GlfmMermaidBlock, GlfmSourceBlock } from '../glfm/extensions/special';
+import { resolveAssetUrl, resolveLinkUrl } from '../material/preview';
+import type { DocumentContext } from './types';
 import CodeBlockView from '../components/nodeviews/CodeBlockView.vue';
 import MathView from '../components/nodeviews/MathView.vue';
 import MermaidView from '../components/nodeviews/MermaidView.vue';
@@ -101,9 +103,46 @@ const DetailsSummaryWithView = GlfmDetailsSummary.extend({
   },
 });
 
-/** 返回带节点视图的编辑器扩展列表。 */
-export function editorExtensions(): Extensions {
+/** 返回带节点视图和宿主展示地址的编辑器扩展列表。 */
+export function editorExtensions(context: DocumentContext): Extensions {
   const base = glfmExtensions();
+
+  const ImageWithContext = GlfmImage.extend({
+    /** 只替换展示地址，节点中的原始地址用于 Markdown 导出。 */
+    renderHTML({ node, HTMLAttributes }) {
+      const { displaySrc, ...rest } = HTMLAttributes;
+      void displaySrc;
+      const source = (node.attrs.displaySrc ?? node.attrs.src) as string | null;
+      return ['img', mergeAttributes(rest, { src: resolveAssetUrl(source ?? '', context) })];
+    },
+  });
+
+  const MediaWithContext = GlfmMedia.extend({
+    /** 音视频和附件沿用图片的资源基准地址。 */
+    renderHTML({ node, HTMLAttributes }) {
+      const { source, kind, sourceId, ...rest } = HTMLAttributes;
+      void source;
+      void kind;
+      void sourceId;
+      const asset = node.attrs.src as string | null;
+      const attrs = mergeAttributes(rest, asset ? { src: resolveAssetUrl(asset, context) } : {});
+      if (node.attrs.kind === 'audio') return ['audio', mergeAttributes(attrs, { controls: '', preload: 'none' })];
+      if (node.attrs.kind === 'video') return ['video', mergeAttributes(attrs, { controls: '', preload: 'none' })];
+      return ['a', mergeAttributes(attrs, { 'data-media-file': '' }), node.attrs.alt ?? ''];
+    },
+  });
+
+  const LinkWithContext = GlfmLink.extend({
+    /** 链接展示使用文档基准地址，标记仍保留原始 href。 */
+    renderHTML({ HTMLAttributes }) {
+      const { isReference, canonicalSrc, isGollumLink, ...rest } = HTMLAttributes;
+      void isReference;
+      void canonicalSrc;
+      void isGollumLink;
+      const href = rest.href as string | undefined;
+      return ['a', { ...rest, href: resolveLinkUrl(href ?? '', context), rel: 'noopener noreferrer nofollow' }, 0];
+    },
+  });
 
   return [FocusDecoration, ...base.map((extension) => {
     const name = extension.name;
@@ -112,6 +151,9 @@ export function editorExtensions(): Extensions {
     if (name === GlfmMathInline.name) return MathInlineWithView;
     if (name === GlfmMathBlock.name) return MathBlockWithView;
     if (name === GlfmMermaidBlock.name) return MermaidWithView;
+    if (name === GlfmImage.name) return ImageWithContext;
+    if (name === GlfmMedia.name) return MediaWithContext;
+    if (name === GlfmLink.name) return LinkWithContext;
     if (name === GlfmDetailsSummary.name) return DetailsSummaryWithView;
     if (name === GlfmDetails.name) return DetailsWithView;
     return extension;

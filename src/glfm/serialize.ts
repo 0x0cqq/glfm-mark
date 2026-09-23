@@ -241,6 +241,9 @@ function renderBlock(node: ProseMirrorNode, options: SerializeOptions): string {
     case 'alert':
       return renderAlert(node, options);
 
+    case 'mkdocsAdmonition':
+      return renderMkdocsAdmonition(node, options);
+
     case 'bulletList':
       return renderList(node, options, () => '- ');
 
@@ -331,6 +334,22 @@ function renderAlert(node: ProseMirrorNode, options: SerializeOptions): string {
 
   const content = body ? `${marker}\n${body}` : marker;
   return prefixLines(content, '> ', '>');
+}
+
+/** MkDocs 提示块：正文按四空格缩进，保留类型和可选的显式标题。 */
+function renderMkdocsAdmonition(node: ProseMirrorNode, options: SerializeOptions): string {
+  const eol = options.eol ?? '\n';
+  const type = String(node.attrs.type ?? 'note');
+  const modifiers = String(node.attrs.modifiers ?? '');
+  const titleNode = node.child(0);
+  const title = serializeInline(titleNode);
+  const defaultTitle = type.charAt(0).toUpperCase() + type.slice(1);
+  const explicitTitle = Boolean(node.attrs.titleExplicit) || title !== defaultTitle;
+  const marker = `!!!${type}${modifiers ? ` ${modifiers}` : ''}${explicitTitle ? ` "${title.replace(/"/g, '\\"')}"` : ''}`;
+  const bodyNodes: ProseMirrorNode[] = [];
+  node.forEach((child, _offset, index) => { if (index > 0) bodyNodes.push(child); });
+  const body = bodyNodes.map((child) => renderBlock(child, options)).filter(Boolean).join('\n\n');
+  return body ? `${marker}${eol}${prefixLines(body, '    ', '').replaceAll('\n', eol)}` : marker;
 }
 
 /** 围栏代码块：围栏长度按内容中最长反引号串调整。 */

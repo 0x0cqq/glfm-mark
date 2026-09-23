@@ -1,14 +1,24 @@
 /**
  * 编辑器组件集成测试：验证模式切换、v-model 回声、状态与保存上传行为。
  */
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
 import { nextTick } from 'vue';
+import { NodeSelection } from '@tiptap/pm/state';
+import type { Editor } from '@tiptap/vue-3';
 import GlfmEditor from '../src/components/GlfmEditor.vue';
 import type { DocumentContext, EditorServices, EditorState } from '../src/core/types';
 import * as localRenderer from '../src/glfm/render';
 const realRender = localRenderer.renderMarkdown;
 afterEach(() => vi.restoreAllMocks());
+beforeAll(() => {
+  Object.defineProperty(HTMLDialogElement.prototype, 'showModal', { configurable: true, value() { this.open = true; } });
+  Object.defineProperty(HTMLDialogElement.prototype, 'close', { configurable: true, value() { this.open = false; } });
+});
+afterAll(() => {
+  delete (HTMLDialogElement.prototype as { showModal?: () => void }).showModal;
+  delete (HTMLDialogElement.prototype as { close?: () => void }).close;
+});
 import { resetSourceIdCounter } from '../src/source/source-id';
 
 
@@ -74,6 +84,33 @@ describe('编辑器组件', () => {
     const wrapper = await mountEditor(markdown);
     const handle = wrapper.vm as unknown as { getMarkdown(): string };
     expect(handle.getMarkdown()).toBe(markdown);
+    wrapper.unmount();
+  });
+
+  it('富文本相对资源按宿主目录显示，导出保留原始地址', async () => {
+    const markdown = '![图](sorting.assets/a.png)\n\n[链接](chapter.md)\n\n![音频](audio/clip.mp3)\n';
+    const wrapper = await mountEditor(markdown);
+    expect(wrapper.get('.ProseMirror img').attributes('src')).toBe('https://example.com/docs/assets/sorting.assets/a.png');
+    expect(wrapper.get('.ProseMirror a[href]').attributes('href')).toBe('https://example.com/docs/chapter.md');
+    expect(wrapper.get('.ProseMirror audio').attributes('src')).toBe('https://example.com/docs/assets/audio/clip.mp3');
+    expect((wrapper.vm as unknown as { getMarkdown(): string }).getMarkdown()).toBe(markdown);
+    wrapper.unmount();
+  });
+
+  it('编辑选中图片只改该图片，保留尺寸与相邻 CRLF', async () => {
+    const markdown = '前文\r\n\r\n![旧](./a.png){width=50%}\r\n\r\n后文\r\n';
+    const wrapper = await mountEditor(markdown);
+    const instance = getEditor(wrapper) as Editor;
+    let imagePos = -1;
+    instance.state.doc.descendants((node, pos) => { if (node.type.name === 'image') imagePos = pos; });
+    instance.view.dispatch(instance.state.tr.setSelection(NodeSelection.create(instance.state.doc, imagePos)));
+    await wrapper.get('[aria-label="插入内容"]').trigger('click');
+    await wrapper.get('[data-testid="toolbar-image"]').trigger('click');
+    expect(wrapper.get('[data-testid="link-dialog"] h2').text()).toBe('编辑图片');
+    expect((wrapper.get('[data-testid="link-dialog-href"]').element as HTMLInputElement).value).toBe('./a.png');
+    await wrapper.get('[data-testid="link-dialog-alt"]').setValue('新图');
+    await wrapper.get('[data-testid="link-dialog-submit"]').trigger('click');
+    expect((wrapper.vm as unknown as { getMarkdown(): string }).getMarkdown()).toBe('前文\r\n\r\n![新图](./a.png){width="50%"}\r\n\r\n后文\r\n');
     wrapper.unmount();
   });
 

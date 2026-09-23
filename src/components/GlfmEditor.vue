@@ -5,7 +5,7 @@
  */
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import { TextSelection } from '@tiptap/pm/state';
+import { NodeSelection, TextSelection } from '@tiptap/pm/state';
 import { EditorContent, type Editor } from '@tiptap/vue-3';
 import { GlfmEditorCore } from '../core/editor';
 import { editorExtensions } from '../core/extensions';
@@ -70,6 +70,7 @@ const errorMessage = ref('');
 const blockStyle = ref('paragraph');
 const linkDialog = ref<{ open: boolean; kind: 'link' | 'image' }>({ open: false, kind: 'link' });
 const linkValues = ref({ href: '', title: '', alt: '' });
+const imagePosition = ref<number | null>(null);
 
 /** 当前是否处于输入法组合状态。 */
 const composing = ref(false);
@@ -85,7 +86,7 @@ onMounted(async () => {
     readonly: props.readonly,
     initialMode: props.initialMode,
     element: null,
-    extensions: editorExtensions,
+    extensions: () => editorExtensions(props.context),
     callbacks: {
       onUpdate: (markdown) => {
         if (composing.value) return;
@@ -352,13 +353,28 @@ function editImage() {
   const instance = editor.value;
   if (!instance) return;
 
-  const attrs = instance.getAttributes('image');
+  const selection = instance.state.selection;
+  const selectedImage = selection instanceof NodeSelection && selection.node.type.name === 'image'
+    ? selection.node
+    : null;
+  imagePosition.value = selectedImage ? selection.from : null;
+  const attrs = selectedImage?.attrs ?? {};
   linkValues.value = {
     href: (attrs.src as string) ?? '',
     title: (attrs.title as string) ?? '',
     alt: (attrs.alt as string) ?? '',
   };
   linkDialog.value = { open: true, kind: 'image' };
+}
+
+/** 双击图片时选择节点并打开编辑弹窗。 */
+function handleImageDoubleClick(event: MouseEvent) {
+  const instance = editor.value;
+  if (!instance || props.readonly || !(event.target instanceof HTMLImageElement)) return;
+  const position = instance.view.posAtDOM(event.target, 0);
+  if (instance.state.doc.nodeAt(position)?.type.name !== 'image') return;
+  instance.view.dispatch(instance.state.tr.setSelection(NodeSelection.create(instance.state.doc, position)));
+  editImage();
 }
 
 /** 应用链接或图片。 */
@@ -379,22 +395,48 @@ function applyLink(value: { href: string; title: string; alt: string }) {
       return;
     }
 
-    instance
-      .chain()
-      .focus()
-      .insertContent({
-        type: 'image',
-        attrs: { src: value.href, alt: value.alt || null, title: value.title || null },
-      })
-      .run();
+    if (imagePosition.value !== null) {
+      const position = imagePosition.value;
+      const node = instance.state.doc.nodeAt(position);
+      if (!node || node.type.name !== 'image') {
+        errorMessage.value = '图片位置已变化，请重新选择图片。';
+        return;
+      }
+      instance.view.dispatch(instance.state.tr.setNodeMarkup(position, undefined, {
+        ...node.attrs,
+        src: value.href,
+        alt: value.alt || null,
+        title: value.title || null,
+        isReference: node.attrs.src === value.href && node.attrs.isReference,
+        displaySrc: null,
+      }));
+      instance.commands.focus();
+      return;
+    }
+
+    instance.chain().focus().insertContent({
+      type: 'image',
+      attrs: { src: value.href, alt: value.alt || null, title: value.title || null },
+    }).run();
   });
   linkDialog.value.open = false;
+  imagePosition.value = null;
 }
 
-/** 移除链接。 */
+/** 移除选中的链接或图片。 */
 function removeLink() {
-  run((instance) => instance.chain().focus().unsetLink().run());
+  run((instance) => {
+    if (linkDialog.value.kind === 'image' && imagePosition.value !== null) {
+      const position = imagePosition.value;
+      const node = instance.state.doc.nodeAt(position);
+      if (node?.type.name === 'image') {
+        instance.view.dispatch(instance.state.tr.delete(position, position + node.nodeSize));
+        instance.commands.focus();
+      }
+    } else instance.chain().focus().unsetLink().run();
+  });
   linkDialog.value.open = false;
+  imagePosition.value = null;
 }
 
 /** 保存。 */
@@ -414,7 +456,7 @@ function navigateHeading(pos: number) {
   editor.value?.chain().focus().setTextSelection(pos + 1).scrollIntoView().run();
 }
 /** 关闭链接编辑后恢复正文焦点。 */
-function closeLink() { linkDialog.value.open = false; editor.value?.commands.focus(); }
+function closeLink() { linkDialog.value.open = false; imagePosition.value = null; editor.value?.commands.focus(); }
 /** 输入法完成后发出最新文本。 */
 function finishComposition() {
   composing.value = false;
@@ -521,7 +563,7 @@ const showPreview = computed(() => state.value.mode === 'preview');
         <span v-if="!outline.length" class="glfm-editor__muted">添加标题后在这里导航。</span>
       </nav>
       <div class="glfm-editor__document">
-    <div v-show="showEditor" class="glfm-editor__content" data-testid="editor-content">
+    <div v-show="showEditor" class="glfm-editor__content" data-testid="editor-content" @dblclick="handleImageDoubleClick">
       <EditorGutter v-if="core && editorKey" :core="core" :focused="editorFocused" />
       <!-- `md-typeset` 让编辑区在 Material 宿主中继承阅读排版；无 Material 样式时无影响。 -->
       <EditorContent v-if="editor" :key="editorKey" class="md-typeset glfm-editor__typeset" :editor="editor" />
@@ -554,6 +596,7 @@ const showPreview = computed(() => state.value.mode === 'preview');
     <LinkDialog
       :open="linkDialog.open"
       :kind="linkDialog.kind"
+      :editing-image="imagePosition !== null"
       :href="linkValues.href"
       :title="linkValues.title"
       :alt="linkValues.alt"

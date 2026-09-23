@@ -12,6 +12,7 @@ const props = defineProps<{
   href: string;
   title: string;
   alt: string;
+  editingImage?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -40,15 +41,16 @@ watch(
 
 /** 提交。 */
 function submit() {
+  if (props.kind === 'image' && !href.value.trim()) { error.value = '请输入图片地址。'; return; }
   if (href.value.trim() && !isSafeUrl(href.value)) { error.value = '请输入安全的网页或相对地址。'; return; }
   emit('submit', { href: href.value.trim(), title: title.value.trim(), alt: alt.value.trim() });
 }
 </script>
 
 <template>
-  <EditorDialog :open="open" :label="kind === 'link' ? '编辑链接' : '插入图片'" @close="emit('close')">
+  <EditorDialog :open="open" :label="kind === 'link' ? '编辑链接' : editingImage ? '编辑图片' : '插入图片'" @close="emit('close')">
     <form v-if="open" data-testid="link-dialog" @submit.prevent="submit">
-      <div class="glfm-editor__dialog-heading"><h2>{{ kind === 'link' ? '编辑链接' : '插入图片' }}</h2><button type="button" class="glfm-editor__button" aria-label="关闭对话框" @click="emit('close')">×</button></div>
+      <div class="glfm-editor__dialog-heading"><h2>{{ kind === 'link' ? '编辑链接' : editingImage ? '编辑图片' : '插入图片' }}</h2><button type="button" class="glfm-editor__button" aria-label="关闭对话框" @click="emit('close')">×</button></div>
       <label class="glfm-editor__dialog-label" :for="`${id}-href`">{{ kind === 'link' ? '链接地址' : '图片地址' }}</label>
       <input :id="`${id}-href`" v-model="href" autofocus class="glfm-editor__dialog-input" placeholder="https:// 或相对路径" data-testid="link-dialog-href" />
       <template v-if="kind === 'image'"><label class="glfm-editor__dialog-label" :for="`${id}-alt`">替代文本</label><input :id="`${id}-alt`" v-model="alt" class="glfm-editor__dialog-input" data-testid="link-dialog-alt" /></template>
@@ -56,7 +58,7 @@ function submit() {
       <input :id="`${id}-title`" v-model="title" class="glfm-editor__dialog-input" data-testid="link-dialog-title" />
       <p v-if="error" class="glfm-editor__preview-error" role="alert">{{ error }}</p>
       <div class="glfm-editor__dialog-actions">
-        <button v-if="kind === 'link' && props.href" type="button" class="glfm-editor__button" data-testid="link-dialog-remove" @click="emit('remove')">移除链接</button>
+        <button v-if="(kind === 'link' && props.href) || (kind === 'image' && editingImage)" type="button" class="glfm-editor__button" data-testid="link-dialog-remove" @click="emit('remove')">{{ kind === 'link' ? '移除链接' : '移除图片' }}</button>
         <button type="button" class="glfm-editor__button" @click="emit('close')">取消</button>
         <button type="submit" class="glfm-editor__button-primary" data-testid="link-dialog-submit">应用</button>
       </div>

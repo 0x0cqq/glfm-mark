@@ -27,6 +27,8 @@ import {
 import {
   GlfmAlert,
   GlfmAlertTitle,
+  MkdocsAdmonition,
+  MkdocsAdmonitionTitle,
   GlfmDetails,
   GlfmDetailsContent,
   GlfmDetailsSummary,
@@ -102,6 +104,8 @@ export function glfmExtensions(): Extensions {
     GlfmHardBreak,
     GlfmAlert,
     GlfmAlertTitle,
+    MkdocsAdmonition,
+    MkdocsAdmonitionTitle,
     GlfmDetails,
     GlfmDetailsSummary,
     GlfmDetailsContent,

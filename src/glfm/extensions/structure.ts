@@ -105,6 +105,58 @@ export const GlfmAlert = Node.create({
   },
 });
 
+/** MkDocs 提示块标题：保留行内格式，编辑后仍写回 MkDocs 标题。 */
+export const MkdocsAdmonitionTitle = Node.create({
+  name: 'mkdocsAdmonitionTitle',
+  content: 'inline*',
+  defining: true,
+  selectable: false,
+
+  parseHTML() {
+    return [{ tag: 'p[data-mkdocs-title]', priority: 70 }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['p', mergeAttributes(HTMLAttributes, { class: 'admonition-title', 'data-mkdocs-title': '' }), 0];
+  },
+});
+
+/** MkDocs `!!!` 提示块：正文直接编辑，类型和标题仍使用宿主方言导出。 */
+export const MkdocsAdmonition = Node.create({
+  name: 'mkdocsAdmonition',
+  content: 'mkdocsAdmonitionTitle block+',
+  group: 'block',
+  defining: true,
+  isolating: true,
+
+  addAttributes() {
+    return {
+      type: { default: 'note', parseHTML: (element) => element.getAttribute('data-mkdocs-type') ?? 'note' },
+      modifiers: { default: '', parseHTML: (element) => element.getAttribute('data-mkdocs-modifiers') ?? '' },
+      titleExplicit: { default: false, parseHTML: (element) => element.getAttribute('data-mkdocs-title-explicit') === 'true' },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: 'div[data-mkdocs-admonition]' }];
+  },
+
+  renderHTML({ node, HTMLAttributes }) {
+    const { type, modifiers, titleExplicit, sourceId, ...rest } = HTMLAttributes;
+    void type;
+    void modifiers;
+    void titleExplicit;
+    void sourceId;
+    return ['div', mergeAttributes(rest, {
+      class: `admonition ${node.attrs.type} ${node.attrs.modifiers}`.trim(),
+      'data-mkdocs-admonition': '',
+      'data-mkdocs-type': node.attrs.type,
+      'data-mkdocs-modifiers': node.attrs.modifiers,
+      'data-mkdocs-title-explicit': String(node.attrs.titleExplicit),
+    }), 0];
+  },
+});
+
 /** 折叠块标题：对应 `<summary>`，只承载行内内容。 */
 export const GlfmDetailsSummary = Node.create({
   name: 'detailsSummary',

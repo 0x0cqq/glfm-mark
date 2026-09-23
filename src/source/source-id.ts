@@ -33,6 +33,7 @@ export const BLOCK_TYPES = [
   'horizontalRule',
   'table',
   'alert',
+  'mkdocsAdmonition',
   'details',
   'sourceBlock',
   'htmlComment',

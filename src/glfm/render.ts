@@ -54,6 +54,31 @@ md.block.ruler.before('fence', 'glfm_blocks', (state, start, end, silent) => {
   return true;
 }, { alt: ['paragraph', 'reference', 'blockquote', 'list'] });
 
+/** 识别 MkDocs 容器，提示块交给结构化节点，其余容器保留源码。 */
+md.block.ruler.before('fence', 'mkdocs_blocks', (state, start, end, silent) => {
+  const first = lineAt(state, start);
+  const admonition = /^!{3}[ \t]*([\w-]+)(?:[ \t]+(.*))?$/.exec(first);
+  const collapsible = /^\?{3}\+?[ \t]*[\w-]+(?:[ \t]+.*)?$/.test(first);
+  const tab = /^===[ \t]+(?:"[^"]+"|'[^']+')\s*$/.test(first);
+  if (!admonition && !collapsible && !tab) return false;
+  if (silent) return true;
+
+  let finish = start + 1;
+  while (finish < end) {
+    const raw = state.src.slice(state.bMarks[finish], state.eMarks[finish]);
+    if (raw.trim() && state.sCount[finish] < state.blkIndent + 4) break;
+    finish++;
+  }
+
+  const token = state.push('glfm_block', '', 0);
+  token.block = true;
+  token.map = [start, finish];
+  token.content = state.getLines(start, finish, state.blkIndent, false).replace(/\n$/, '');
+  token.meta = { kind: admonition ? 'mkdocsAdmonition' : 'source' };
+  state.line = finish;
+  return true;
+}, { alt: ['paragraph', 'reference', 'blockquote', 'list'] });
+
 /** 识别行内数学、脚注及本地引用；反斜杠与代码先由 Markdown 规则处理。 */
 md.inline.ruler.before('escape', 'glfm_inline', (state, silent) => {
   const rest = state.src.slice(state.pos, state.posMax);
@@ -128,6 +153,17 @@ md.renderer.rules.glfm_block = (tokens, index) => {
   const lines = token.content.split('\n');
   const body = lines.slice(1, -1).join('\n');
   switch (token.meta.kind) {
+    case 'mkdocsAdmonition': {
+      const marker = /^!{3}[ \t]*([\w-]+)(?:[ \t]+(.*))?$/.exec(lines[0]);
+      if (!marker) return sourceHtml(token.content, position);
+      const type = marker[1];
+      const rest = marker[2]?.trim() ?? '';
+      const titleMatch = /^(.*?)\s*"([\s\S]*)"$/.exec(rest);
+      const modifiers = titleMatch ? titleMatch[1].trim() : rest;
+      const title = titleMatch ? titleMatch[2] : type.charAt(0).toUpperCase() + type.slice(1);
+      const body = lines.slice(1).map((line) => line.replace(/^(?: {4}|\t)/, '')).join('\n').replace(/\n+$/, '');
+      return `<div class="admonition ${escape(type)} ${escape(modifiers)}" data-mkdocs-admonition="" data-mkdocs-type="${escape(type)}" data-mkdocs-modifiers="${escape(modifiers)}" data-mkdocs-title-explicit="${titleMatch ? 'true' : 'false'}"${position}><p class="admonition-title" data-mkdocs-title="">${md.renderInline(title)}</p>${body ? renderHtml(body) : '<p></p>'}</div>\n`;
+    }
     case 'quote': return `<blockquote data-multiline="true"${position}>${renderHtml(body)}</blockquote>\n`;
     case 'math': return `<pre data-delimiter="$$"${position}><code data-math-style="display">${escape(body)}</code></pre>\n`;
     case 'details': {

@@ -16,6 +16,7 @@ const NODE_ATTRS: Record<string, string[]> = {
   mermaidBlock: ['info'],
   sourceBlock: [],
   alert: ['type'],
+  mkdocsAdmonition: ['type', 'modifiers', 'titleExplicit'],
   details: ['open'],
   detailsSummary: [],
   detailsContent: [],

@@ -5,7 +5,7 @@
  * 1. 整份语义文档恢复到基线时，直接返回完整原文。
  * 2. 节点具有基线 ID 且语义与初始节点一致时，使用 `raw`。
  * 3. 源码保留节点被修改时，输出其当前源码文本。
- * 4. 其他新增或修改节点使用 GLFM serializer。
+ * 4. 其他新增或修改节点使用本地 Markdown serializer。
  * 5. 被删除节点不输出。
  */
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
@@ -25,8 +25,8 @@ interface RenderedBlock {
 }
 
 /** 序列化单个顶层节点。 */
-function serializeBlock(serializer: GlfmSerializer, node: ProseMirrorNode): string {
-  return serializer.serialize(node);
+function serializeBlock(serializer: GlfmSerializer, node: ProseMirrorNode, eol?: '\n' | '\r\n'): string {
+  return serializer.serialize(node, { eol });
 }
 
 /**
@@ -65,7 +65,7 @@ export function exportMarkdown(
     }
 
     return {
-      text: serializeBlock(serializer, node),
+      text: serializeBlock(serializer, node, baseline?.defaultEol),
       reused: false,
       baselineIndex: index,
     };
@@ -90,7 +90,7 @@ export function exportMarkdown(
   const parts: string[] = [];
   let previous: RenderedBlock | null = null;
   let previousNodeIndex = -1;
-  let offset = rendered[0]?.reused && rendered[0].baselineIndex === 0 ? (baseline?.gaps[0]?.length ?? 0) : 0;
+  let offset = rendered[0]?.baselineIndex === 0 ? (baseline?.gaps[0]?.length ?? 0) : 0;
 
   rendered.forEach((block, nodeIndex) => {
     if (previous) {
@@ -107,7 +107,7 @@ export function exportMarkdown(
 
   let result = parts.join('');
 
-  // 首尾空白只在对应边界块未被修改时复用。
+  // 原始边界块仍位于边界时复用首尾空白。
   if (baseline) {
     result = applyEdgeWhitespace(result, rendered, baseline);
   }
@@ -126,7 +126,7 @@ function isUnchanged(rendered: RenderedBlock[], baseline: SourceBaseline): boole
 /**
  * 计算两个相邻块之间的间隔。
  *
- * 原来相邻且均未修改时复用原间隔；否则使用两个默认换行。
+ * 原来相邻时复用原间隔；新建或重排的块使用文档默认换行。
  */
 function separatorFor(
   left: RenderedBlock,
@@ -143,18 +143,17 @@ function separatorFor(
   const originallyAdjacent =
     leftIndex >= 0 && rightIndex === leftIndex + 1 && rightNodeIndex === leftNodeIndex + 1;
 
-  if (left.reused && right.reused && originallyAdjacent) {
-    return baseline.gaps[leftIndex + 1] ?? DEFAULT_BLOCK_SEPARATOR;
+  if (originallyAdjacent) {
+    return baseline.gaps[leftIndex + 1] ?? baseline.defaultEol.repeat(2);
   }
 
-  return DEFAULT_BLOCK_SEPARATOR;
+  return baseline.defaultEol.repeat(2);
 }
 
 /**
  * 复用原文首尾空白。
  *
- * 只有当原始首块 / 尾块仍位于文档边界且未被修改时才保留，避免把旧空白
- * 错误地贴在新建内容上。
+ * 原始首块 / 尾块仍位于文档边界时保留对应空白。
  */
 function applyEdgeWhitespace(
   result: string,
@@ -169,12 +168,11 @@ function applyEdgeWhitespace(
   let leading = '';
   let trailing = '';
 
-  if (first?.reused && first.baselineIndex === 0 && firstBlock) {
+  if (first?.baselineIndex === 0 && firstBlock) {
     leading = baseline.gaps[0] ?? '';
   }
   if (
-    last?.reused &&
-    last.baselineIndex === baseline.blocks.length - 1 &&
+    last?.baselineIndex === baseline.blocks.length - 1 &&
     lastBlock
   ) {
     trailing = baseline.gaps[baseline.blocks.length] ?? '';

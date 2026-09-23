@@ -122,6 +122,31 @@ describe('局部编辑', () => {
     );
   });
 
+  it('修改 CRLF 文档的段落时保留原有间隔和末尾换行', async () => {
+    const markdown = '# 标题\r\n\r\n第一段。\r\n\r\n第二段。\r\n';
+    const env = createEnv();
+    const result = await load(env, markdown);
+    const nodes = topLevel(result.doc);
+    const changed = env.schema.nodes.paragraph.create(nodes[1].attrs, env.schema.text('修改后。'));
+    const newDoc = env.schema.topNodeType.create(null, [nodes[0], changed, nodes[2]]);
+
+    expect(env.controller.export(newDoc)).toBe('# 标题\r\n\r\n修改后。\r\n\r\n第二段。\r\n');
+
+    const changedLast = env.schema.nodes.paragraph.create(nodes[2].attrs, env.schema.text('末段修改。'));
+    const lastDoc = env.schema.topNodeType.create(null, [nodes[0], nodes[1], changedLast]);
+    expect(env.controller.export(lastDoc)).toBe('# 标题\r\n\r\n第一段。\r\n\r\n末段修改。\r\n');
+  });
+
+  it('在 CRLF 文档中新增块时使用文档的换行格式', async () => {
+    const env = createEnv();
+    const result = await load(env, '# 标题\r\n\r\n原段落。\r\n');
+    const nodes = topLevel(result.doc);
+    const added = env.schema.nodes.paragraph.create(null, env.schema.text('新增段落。'));
+    const newDoc = env.schema.topNodeType.create(null, [nodes[0], added, nodes[1]]);
+
+    expect(env.controller.export(newDoc)).toBe('# 标题\r\n\r\n新增段落。\r\n\r\n原段落。\r\n');
+  });
+
   it('修改中间段落，前后块保持原文', async () => {
     const markdown = [
       '```js',

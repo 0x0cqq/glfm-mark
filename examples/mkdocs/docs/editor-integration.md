@@ -39,6 +39,11 @@ MkDocs 会根据页面层级生成资源 URL。脚本中的模块导入相对脚
 标识当前文档，`linkBaseUrl` 与 `assetBaseUrl` 是绝对目录 URL，由宿主根据仓库文件或
 Wiki 页面位置提供。
 
+对于默认目录 URL 的 MkDocs 页面，例如页面 `/cs/algorithms/sorting/` 对应源码
+`docs/cs/algorithms/sorting.md`，同目录附件的 `assetBaseUrl` 应指向
+`/cs/algorithms/` 的绝对 URL。编辑区和预览据此显示图片与媒体，保存时仍使用源码中的
+相对地址。
+
 | 服务 | 用途 | 是否必需 |
 |---|---|---|
 | `uploadFile({ file, context, signal })` | 上传附件，返回 `{ markdown }` 供插入 | 可选 |

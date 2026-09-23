@@ -8,7 +8,7 @@ const rows = ref<{ pos: number; line: number; kind: string; top: number; left: n
 let frame = 0;
 let observer: ResizeObserver | undefined;
 let lines: number[] = [];
-const labels: Record<string, string> = { paragraph: 'P', bulletList: 'UL', orderedList: 'OL', taskList: '☑', codeBlock: '</>', sourceBlock: 'MD', table: '表', alert: '!', details: '⌄', blockquote: '❝', mathBlock: 'ƒ', mermaidBlock: '◇', horizontalRule: '—' };
+const labels: Record<string, string> = { paragraph: 'P', bulletList: 'UL', orderedList: 'OL', taskList: '☑', codeBlock: '</>', sourceBlock: 'MD', table: '表', alert: '!', mkdocsAdmonition: '!', details: '⌄', blockquote: '❝', mathBlock: 'ƒ', mermaidBlock: '◇', horizontalRule: '—' };
 /** 只在内容变化时重新计算导出行号；选区变化仅更新布局。 */
 function changed({ transaction }: { transaction: import('@tiptap/pm/state').Transaction }) {
   if (transaction.docChanged) lines = props.core.getBlockLines();
