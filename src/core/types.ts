@@ -43,6 +43,8 @@ export interface EditorServices {
   uploadFile?(request: UploadRequest): Promise<UploadResult>;
   /** 保存 Markdown。 */
   saveMarkdown?(request: SaveRequest): Promise<void>;
+  /** 解析本次会话中待写入图片的临时展示地址。 */
+  resolveAssetPreview?(source: string): string | undefined;
 }
 
 /** 组件错误。 */

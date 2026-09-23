@@ -71,10 +71,15 @@ function convertAlerts(root: ParentNode): void {
 }
 
 /** 解析图片与链接的展示地址。 */
-function resolveUrls(root: ParentNode, context: DocumentContext): void {
+function resolveUrls(
+  root: ParentNode,
+  context: DocumentContext,
+  resolveAssetPreview?: (source: string) => string | undefined,
+): void {
   root.querySelectorAll('img[src]').forEach((img) => {
     const src = img.getAttribute('src') ?? '';
-    const display = img.getAttribute('data-canonical-src') ?? src;
+    const original = img.getAttribute('data-canonical-src') ?? src;
+    const display = resolveAssetPreview?.(original) ?? original;
     img.setAttribute('src', resolveAssetUrl(display, context));
     img.setAttribute('loading', 'lazy');
     img.setAttribute('decoding', 'async');
@@ -201,13 +206,14 @@ async function enhanceMermaid(root: ParentNode): Promise<void> {
 export async function renderPreviewHtml(
   html: string,
   context: DocumentContext,
+  resolveAssetPreview?: (source: string) => string | undefined,
 ): Promise<HTMLElement> {
   const container = document.createElement('div');
   container.className = 'md-typeset glfm-editor__preview';
   container.innerHTML = sanitizeGitLabHtml(html);
 
   convertAlerts(container);
-  resolveUrls(container, context);
+  resolveUrls(container, context, resolveAssetPreview);
   enhanceCodeBlocks(container);
   await enhanceMath(container);
   await enhanceMermaid(container);

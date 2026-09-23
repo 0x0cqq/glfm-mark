@@ -13,6 +13,7 @@ const props = withDefaults(
   defineProps<{
     markdown: string;
     context: DocumentContext;
+    resolveAssetPreview?: (source: string) => string | undefined;
     /** 输入变化后的刷新延迟，单位毫秒。 */
     delay?: number;
     theme?: EditorTheme;
@@ -40,7 +41,7 @@ async function refresh(): Promise<void> {
 
     if (current !== seq) return;
 
-    const rendered = await renderPreviewHtml(html, props.context);
+    const rendered = await renderPreviewHtml(html, props.context, props.resolveAssetPreview);
     if (current !== seq) return;
 
     if (container.value) {

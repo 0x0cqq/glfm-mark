@@ -48,10 +48,17 @@ Wiki 页面位置提供。
 |---|---|---|
 | `uploadFile({ file, context, signal })` | 上传附件，返回 `{ markdown }` 供插入 | 可选 |
 | `saveMarkdown({ markdown, context, signal })` | 保存请求发起时的 Markdown 快照，成功时 resolve | 可选 |
+| `resolveAssetPreview(source)` | 待写入图片的临时展示地址；源码继续使用相对地址 | 可选 |
 
 上传与保存实现应传递 `signal`，检查 HTTP 状态和返回字段，失败时抛出错误。组件据此
 保留当前内容并显示失败；`fetch` 收到 HTTP 4xx/5xx 本身不会抛出异常。
 静态页面托管不会自动获得文档读取、上传或保存 API。
+
+需要把 Markdown 与新图片一起提交时，宿主可使用 `DocumentSession` 生成
+`DocumentBundle` 并交给存储适配器。Node 本地验证可用 `LocalDirectoryAdapter` 写入
+隔离的仓库副本；浏览器需要宿主 API 连接本地文件系统。接口见项目
+[`src/adapters/types.ts`](../../../src/adapters/types.ts) 和
+[`docs/architecture.md`](../../../docs/architecture.md)。
 
 ## 初始化与即时导航
 

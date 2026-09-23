@@ -38,7 +38,8 @@
     "test:watch": "vitest",
     "test:visual": "playwright test",
     "examples:prepare": "node --experimental-strip-types tools/prepare-examples.ts",
-    "examples:build": "npm run build && npm run examples:prepare && .venv/Scripts/python -m mkdocs build --config-file examples/mkdocs/mkdocs.yml"
+    "examples:build": "npm run build && npm run examples:prepare && .venv/Scripts/python -m mkdocs build --config-file examples/mkdocs/mkdocs.yml",
+    "demo:local": "node --experimental-strip-types tools/local-demo-server.ts"
   },
   "peerDependencies": {
     "vue": "^3.5.0"

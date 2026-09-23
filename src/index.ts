@@ -22,6 +22,8 @@ export { sanitizeGitLabHtml, sanitizeSvg, isSafeUrl } from './material/sanitize'
 export { renderInlineMath, renderBlockMath } from './material/math';
 export { renderMermaid, detectTheme } from './material/mermaid';
 export { highlightCode } from './material/highlight';
+export { DocumentSession } from './adapters/document-session';
+export type { AssetWrite, DocumentAdapter, DocumentBundle, DocumentWriteRequest, LoadedDocument } from './adapters/types';
 export { ALERT_TYPES, DEFAULT_ALERT_TITLES } from './glfm/constants';
 export type { AlertType } from './glfm/constants';
 

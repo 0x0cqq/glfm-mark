@@ -65,6 +65,7 @@ export class GlfmEditorCore {
   private previewTimer: ReturnType<typeof setTimeout> | null = null;
   private previewSeq = 0;
   private previewAbort: AbortController | null = null;
+  private readonly operations = new Set<AbortController>();
   private destroyed = false;
 
   constructor(private readonly options: EditorOptions) {
@@ -252,6 +253,7 @@ export class GlfmEditorCore {
     const snapshot = this.getMarkdown();
     this.setState({ saving: true });
     const controller = new AbortController();
+    this.operations.add(controller);
 
     try {
       await saveMarkdown({
@@ -260,17 +262,20 @@ export class GlfmEditorCore {
         signal: controller.signal,
       });
 
-      this.setState({ saving: false });
+      if (this.destroyed) return false;
       this.markSaved(snapshot);
       return true;
     } catch (error) {
-      this.setState({ saving: false });
+      if (this.destroyed || isAbortError(error)) return false;
       this.options.callbacks.onError({
         operation: 'save',
         message: error instanceof Error ? error.message : String(error),
         cause: error,
       });
       return false;
+    } finally {
+      this.operations.delete(controller);
+      if (!this.destroyed) this.setState({ saving: false });
     }
   }
 
@@ -295,6 +300,7 @@ export class GlfmEditorCore {
 
     this.setState({ uploading: this.state.uploading + 1 });
     const controller = new AbortController();
+    this.operations.add(controller);
     const position = this.editor.state.selection.from;
 
     try {
@@ -306,22 +312,30 @@ export class GlfmEditorCore {
 
       // 原插入位置已被删除或文档已切换时，不重新插入附件。
       if (this.destroyed || position > this.editor.state.doc.content.size) {
-        this.setState({ uploading: this.state.uploading - 1 });
         return false;
       }
 
       const parsed = this.parseUploadedMarkdown(markdown);
-      this.editor.chain().insertContentAt(position, parsed).focus().run();
-      this.setState({ uploading: this.state.uploading - 1 });
+      const resolved = this.editor.state.doc.resolve(position);
+      const afterImage = parsed.type === 'image'
+        && resolved.parent.type.name === 'paragraph'
+        && resolved.parentOffset === resolved.parent.content.size
+        && resolved.parent.lastChild?.type.name === 'image';
+      const target = afterImage ? position + 1 : position;
+      const content = afterImage ? { type: 'paragraph', content: [parsed] } : parsed;
+      this.editor.chain().insertContentAt(target, content).focus().run();
       return true;
     } catch (error) {
-      this.setState({ uploading: this.state.uploading - 1 });
+      if (this.destroyed || isAbortError(error)) return false;
       this.options.callbacks.onError({
         operation: 'upload',
         message: error instanceof Error ? error.message : String(error),
         cause: error,
       });
       return false;
+    } finally {
+      this.operations.delete(controller);
+      if (!this.destroyed) this.setState({ uploading: this.state.uploading - 1 });
     }
   }
 
@@ -407,6 +421,8 @@ export class GlfmEditorCore {
   /** 释放编辑器与未完成的请求。 */
   destroy(): void {
     this.destroyed = true;
+    for (const controller of this.operations) controller.abort();
+    this.operations.clear();
     this.cancelPreview();
     this.controller.cancel();
     this.editor.destroy();

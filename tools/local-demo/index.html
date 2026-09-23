@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>glfm-mark 本地仓库演示</title>
+  <link rel="stylesheet" href="/dist/standalone.css">
+  <link rel="stylesheet" href="/dist/katex.css">
+  <style>
+    body { margin: 0; background: #f7f8fa; color: #23262c; font: 15px/1.6 system-ui, sans-serif; }
+    main { max-width: 1180px; margin: 2rem auto; padding: 0 1.25rem; }
+    h1 { margin: 0 0 .25rem; font-size: 1.6rem; }
+    .hint { margin: 0 0 1.25rem; color: #5c626d; }
+    .picker { display: flex; gap: .5rem; align-items: center; margin-bottom: .75rem; }
+    .picker label { font-weight: 600; white-space: nowrap; }
+    .picker input { flex: 1; min-width: 0; padding: .55rem .7rem; border: 1px solid #c9ced8; border-radius: .4rem; background: white; font: inherit; }
+    .picker button { padding: .55rem 1rem; border: 0; border-radius: .4rem; background: #3457aa; color: white; font: inherit; cursor: pointer; }
+    #status { min-height: 1.5rem; margin: .25rem 0 .75rem; color: #4f5560; }
+    #status[data-error] { color: #aa2833; }
+    #editor { background: white; min-height: 65vh; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>本地仓库 Markdown 演示</h1>
+    <p class="hint">选择仓库内的 Markdown 文件。图片先暂存，点击编辑器的“保存”后写入本地工作树。</p>
+    <form id="file-picker" class="picker">
+      <label for="document-path">文件</label>
+      <input id="document-path" list="markdown-files" placeholder="例如 docs/guide.md" autocomplete="off" spellcheck="false">
+      <datalist id="markdown-files"></datalist>
+      <button type="submit">打开</button>
+    </form>
+    <p id="status" role="status">正在读取文件列表…</p>
+    <div id="editor"></div>
+  </main>
+  <script type="module" src="/local-demo.js"></script>
+</body>
+</html>

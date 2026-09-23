@@ -252,6 +252,39 @@ describe('保存与上传', () => {
     core.destroy();
   });
 
+  it('销毁时取消进行中的保存与上传请求', async () => {
+    const signals: AbortSignal[] = [];
+    const waiting = ({ signal }: { signal: AbortSignal }) => {
+      signals.push(signal);
+      return new Promise<never>((_resolve, reject) => {
+        signal.addEventListener('abort', () => reject(new DOMException('已取消', 'AbortError')), { once: true });
+      });
+    };
+    const core = createCore({
+      saveMarkdown: waiting,
+      uploadFile: waiting,
+    });
+    await core.load('# 标题\n');
+    const saving = core.save();
+    const uploading = core.uploadFile(new File(['x'], 'new.png', { type: 'image/png' }));
+    core.destroy();
+
+    expect(await saving).toBe(false);
+    expect(await uploading).toBe(false);
+    expect(signals).toHaveLength(2);
+    expect(signals.every((signal) => signal.aborted)).toBe(true);
+  });
+
+  it('在文末原有图片之后上传时，新图片单独成段', async () => {
+    const core = createCore({ uploadFile: async () => ({ markdown: '![新图](uploads/new.png)' }) });
+    await core.load('![](uploads/old.png)');
+    core.editor.commands.focus('end');
+
+    expect(await core.uploadFile(new File(['x'], 'new.png', { type: 'image/png' }))).toBe(true);
+    expect(core.getMarkdown()).toBe('![](uploads/old.png)\n\n![新图](uploads/new.png)');
+    core.destroy();
+  });
+
   it('上传返回无法解析的 Markdown 时插入源码保留块', async () => {
     const core = createCore({
       uploadFile: async () => ({ markdown: '::: unknown block :::' }),

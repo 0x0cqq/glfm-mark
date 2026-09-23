@@ -144,3 +144,5 @@ export type {
 };
 
 export { renderMarkdown } from './glfm/render';
+export { DocumentSession } from './adapters/document-session';
+export type { AssetWrite, DocumentAdapter, DocumentBundle, DocumentWriteRequest, LoadedDocument } from './adapters/types';

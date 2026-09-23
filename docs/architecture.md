@@ -20,11 +20,12 @@
 | `src/source/` | 源码保留：sourcepos 映射、基线、块身份、局部导出、语义快照 |
 | `src/material/` | Material 展示：HTML 净化、提示块转换、KaTeX、Mermaid、代码高亮 |
 | `src/components/` | Vue 界面：工具栏、源码编辑区、预览、弹窗与节点视图 |
+| `src/adapters/` | 宿主保存包、图片暂存会话与存储接口 |
 | `src/standalone.ts` | 静态挂载入口 `mountGlfmEditor` |
 | `demo/` | 开发演示页 |
 | `examples/mkdocs/` | MkDocs Material 参考页与两类接入示例 |
 | `tests/` | 单元、集成、安全、性能与视觉测试 |
-| `tools/` | 示例资源生成脚本 |
+| `tools/` | 示例资源生成脚本与开发用本地目录适配器 |
 
 ## 数据流
 
@@ -135,6 +136,19 @@ ResizeObserver 处理图片、折叠和公式高度变化。所有辅助状态�
 | 上传 | 占位不写入文档；原位置被删除时不重新插入 |
 | 预览 | 350 ms 延迟刷新；带取消信号与请求序号；失败保留上一份并标注过期 |
 | 销毁 | 释放编辑器、计时器、请求与订阅 |
+
+## 文档与资源的保存边界
+
+编辑器对外仍读写 Markdown 字符串。宿主的 `DocumentSession` 在上传图片时确定仓库相对地址，
+暂存文件字节，并提供仅用于展示的临时地址。保存时将 Markdown 快照与正文引用的新图片组成
+`DocumentBundle`，交给 `DocumentAdapter.write`。写入成功后清除对应暂存；失败时保留供重试。
+已有图片只有 Markdown 引用，不随每次保存重新上传。适配器用载入时的 `revision` 检查并发写入。
+
+`LocalDirectoryAdapter` 是 Node 本地验证实现，接收仓库副本根目录，先写新文件再替换 Markdown。
+`tools/local-demo-server.ts` 为浏览器演示提供本机接口，页面按仓库相对路径切换文件。
+GitHub 适配器可使用相同保存包，授权和提交仍待实现。
+接口以 [`src/adapters/types.ts`](../src/adapters/types.ts) 为准，理由见
+[ADR 0009](adr/0009-document-bundle-adapters.md)。
 
 ## 构建产物
 

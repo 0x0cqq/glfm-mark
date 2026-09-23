@@ -147,7 +147,27 @@ Linux/macOS 使用 `.venv/bin/python`，并将 `examples:build` 展开为 `npm r
 
 `saveMarkdown` 接收请求快照，成功时 resolve、失败时抛出错误。
 `uploadFile` 接收文件，返回 `{ markdown }`。未提供对应服务时不显示保存或上传按钮。
+`resolveAssetPreview` 可为待写入图片提供临时展示地址，Markdown 中仍保存仓库相对地址。
 类型以 [src/core/types.ts](src/core/types.ts) 为准。
+
+需要将 Markdown 与新图片一起写入仓库时，宿主可使用
+[DocumentSession](src/adapters/document-session.ts) 暂存图片，将其 `services` 传给编辑器；
+会话通过 [DocumentAdapter](src/adapters/types.ts) 写入保存包。
+[LocalDirectoryAdapter](tools/local-directory-adapter.ts) 可在 Node 本地工具中写入隔离的仓库副本；
+GitHub 提交适配器尚未实现。浏览器页面需要由宿主提供访问本地文件的服务，不能直接引入 Node 适配器。
+数据边界见 [ADR 0009](docs/adr/0009-document-bundle-adapters.md)。
+
+### 本地仓库演示
+
+先运行 `npm run build`，再运行：
+
+```bash
+npm run demo:local -- D:\projects\glfm-mark-case-local
+```
+
+打开 [http://127.0.0.1:8130/](http://127.0.0.1:8130/)，在页面顶部选择或输入该目录内任意现有
+Markdown 的仓库相对路径。编辑器可上传图片并保存到本地工作树；保存前图片只在页面会话中暂存。
+服务仅监听本机，目录由启动命令指定；请使用隔离的仓库副本。可在命令末尾指定端口。
 
 Vue 实例提供 `getMarkdown()`、`focus()`、`setMode(mode)`、`markSaved(markdown)`；
 事件为 `update:modelValue`、`state-change`、`error`、`saved`。
@@ -155,7 +175,7 @@ Vue 实例提供 `getMarkdown()`、`focus()`、`setMode(mode)`、`markSaved(mark
 Standalone 使用 `markdown` 初始化，支持 `onChange`、`onError` 回调；句柄提供
 `getMarkdown()`、`setMarkdown(markdown)`、`setMode(mode)`、`setTheme(theme)`、`markSaved(markdown)`、`destroy()`。
 
-`GlfmPreview` 接收 `markdown`、`context` 与可选 `theme`，可选 `delay` 默认为 350 ms，提供 `refresh()`。
+`GlfmPreview` 接收 `markdown`、`context` 与可选 `theme`、`resolveAssetPreview`，可选 `delay` 默认为 350 ms，提供 `refresh()`。
 `renderMarkdown(markdown, signal?)` 可独立生成带源码位置的 HTML；
 `renderPreviewHtml(html, context)` 净化并添加 Material、KaTeX、Mermaid 与代码高亮展示。
 
@@ -168,6 +188,7 @@ npm test                 # 单元、组件、安全与性能测试
 npm run build            # 库与 standalone 产物
 npm run examples:prepare # 复制产物和演示 Markdown
 npm run examples:build   # 构建库和 MkDocs 示例
+npm run demo:local -- <仓库副本目录> # 浏览器编辑本地 Markdown
 npm run test:visual      # 浏览器交互与 Material 视觉验证
 ```
 

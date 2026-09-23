@@ -97,6 +97,17 @@ describe('编辑器组件', () => {
     wrapper.unmount();
   });
 
+  it('待写入图片在富文本中显示临时地址，导出仍保留相对地址', async () => {
+    const markdown = '![新图](sorting.assets/new.png)\n';
+    const services = createServices({
+      resolveAssetPreview: (source) => source === 'sorting.assets/new.png' ? 'blob:https://example.test/pending' : undefined,
+    });
+    const wrapper = await mountEditor(markdown, services);
+    expect(wrapper.get('.ProseMirror img').attributes('src')).toBe('blob:https://example.test/pending');
+    expect((wrapper.vm as unknown as { getMarkdown(): string }).getMarkdown()).toBe(markdown);
+    wrapper.unmount();
+  });
+
   it('编辑选中图片只改该图片，保留尺寸与相邻 CRLF', async () => {
     const markdown = '前文\r\n\r\n![旧](./a.png){width=50%}\r\n\r\n后文\r\n';
     const wrapper = await mountEditor(markdown);

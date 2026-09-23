@@ -86,7 +86,7 @@ onMounted(async () => {
     readonly: props.readonly,
     initialMode: props.initialMode,
     element: null,
-    extensions: () => editorExtensions(props.context),
+    extensions: () => editorExtensions(props.context, props.services?.resolveAssetPreview),
     callbacks: {
       onUpdate: (markdown) => {
         if (composing.value) return;
@@ -581,6 +581,7 @@ const showPreview = computed(() => state.value.mode === 'preview');
       :markdown="core?.getMarkdown() ?? modelValue"
       :context="context"
       :theme="theme"
+      :resolve-asset-preview="services?.resolveAssetPreview"
     />
 
       </div>

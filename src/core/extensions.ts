@@ -104,7 +104,10 @@ const DetailsSummaryWithView = GlfmDetailsSummary.extend({
 });
 
 /** 返回带节点视图和宿主展示地址的编辑器扩展列表。 */
-export function editorExtensions(context: DocumentContext): Extensions {
+export function editorExtensions(
+  context: DocumentContext,
+  resolveAssetPreview?: (source: string) => string | undefined,
+): Extensions {
   const base = glfmExtensions();
 
   const ImageWithContext = GlfmImage.extend({
@@ -112,7 +115,8 @@ export function editorExtensions(context: DocumentContext): Extensions {
     renderHTML({ node, HTMLAttributes }) {
       const { displaySrc, ...rest } = HTMLAttributes;
       void displaySrc;
-      const source = (node.attrs.displaySrc ?? node.attrs.src) as string | null;
+      const original = (node.attrs.src ?? '') as string;
+      const source = resolveAssetPreview?.(original) ?? node.attrs.displaySrc ?? original;
       return ['img', mergeAttributes(rest, { src: resolveAssetUrl(source ?? '', context) })];
     },
   });
